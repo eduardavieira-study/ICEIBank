@@ -1,0 +1,14 @@
+{
+  "name": "iceibank-agencia-express",
+  "version": "1.0.0",
+  "description": "Agencia do ICEIBank em Node.js/Express (Exemplo de Referencia do Roteiro)",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0-beta.3",
+    "axios": "^1.7.2"
+  }
+}

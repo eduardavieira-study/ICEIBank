@@ -1,0 +1,8 @@
+{"agencia":"agencia-0","tipo":"CRIAR_CONTA","timestampLamport":1,"horaParede":"2026-08-30T02:20:40.010Z","detalhes":{"id":0,"nomeAluno":"Ana","saldoInicial":100}}
+{"agencia":"agencia-0","tipo":"DEPOSITO","timestampLamport":2,"horaParede":"2026-08-30T02:22:24.770Z","detalhes":{"id":0,"valor":25,"novoSaldo":125}}
+{"agencia":"agencia-0","tipo":"TRANSFERENCIA_DEBITO","timestampLamport":3,"horaParede":"2026-08-30T02:24:05.744Z","detalhes":{"idOrigem":0,"idDestino":1,"valor":30}}
+{"agencia":"agencia-0","tipo":"TRANSFERENCIA_FALHOU","timestampLamport":5,"horaParede":"2026-08-30T02:24:05.794Z","detalhes":{"idOrigem":0,"idDestino":1,"valor":30,"erro":"Request failed with status code 404"}}
+{"agencia":"agencia-0","tipo":"CRIAR_CONTA","timestampLamport":6,"horaParede":"2026-08-30T02:27:45.433Z","detalhes":{"id":3,"nomeAluno":"Helena","saldoInicial":200}}
+{"agencia":"agencia-0","tipo":"DEPOSITO","timestampLamport":7,"horaParede":"2026-08-30T02:29:58.625Z","detalhes":{"id":0,"valor":25,"novoSaldo":120}}
+{"agencia":"agencia-0","tipo":"DEPOSITO","timestampLamport":8,"horaParede":"2026-08-30T02:30:01.483Z","detalhes":{"id":0,"valor":25,"novoSaldo":145}}
+{"agencia":"agencia-0","tipo":"TRANSFERENCIA_DEBITO","timestampLamport":9,"horaParede":"2026-08-30T02:30:28.901Z","detalhes":{"idOrigem":0,"idDestino":1,"valor":30}}
