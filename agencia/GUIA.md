@@ -36,3 +36,11 @@ Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get
 # Depositar
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0/depositar" -Method Post -ContentType "application/json" -Body '{"valor":25}'
 ```
+
+Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":1,"nomeAluno":"Helena","saldoInicial":300}'
+
+Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":4,"nomeAluno":"Lucas","saldoInicial":150}'
+
+Invoke-RestMethod -Uri "http://localhost:4074/transferencias" -Method Post -ContentType "application/json" -Body '{"idOrigem":0,"idDestino":1,"valor":10}'
+
+Invoke-RestMethod -Uri "http://localhost:4075/transferencias" -Method Post -ContentType "application/json" -Body '{"idOrigem":1,"idDestino":4,"valor":15}'
