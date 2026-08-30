@@ -23,4 +23,22 @@
      * **Protocolo de Commit de Duas Fases (2PC - Two-Phase Commit):** Um coordenador centralizado envia uma requisição de preparação ("prepare") para todas as agências envolvidas. Se a agência de origem puder debitar e a agência de destino puder creditar (e estiver ativa), ambas respondem com um voto positivo. Se todas concordarem, o coordenador envia a confirmação final ("commit") para efetivar os saldos. Se qualquer uma falhar ou não responder, toda a transação é cancelada ("abort").
      * **Padrão Saga (Saga Pattern):** Uma série de transações locais sequenciais. A agência de origem debita o dinheiro e faz a chamada de crédito na de destino. Caso a chamada falhe (por tempo limite de rede ou por queda da outra agência), um mecanismo de compensação é disparado de volta para a agência de origem. Esse mecanismo executa uma transação compensatória de estorno (crédito corretivo), restabelecendo o saldo original e garantindo consistência eventual.
 
+## 10.2 Observações - Passo 3
+* **Observação dos eventos empatados:**
+  Analisando os logs unificados, encontramos múltiplos eventos empatados com o mesmo timestamp lógico (como `[Lamport 2]`). Por exemplo:
+  * `[Lamport 2] (19:15:53) agencia-1 - CRIAR_CONTA (Lucas)`
+  * `[Lamport 2] (19:06:33) agencia-0 - DEPOSITO`
+  * `[Lamport 2] (19:17:11) agencia-0 - TRANSFERENCIA_DEBITO`
+  
+  Esses eventos são **concorrentes (independentes)**, pois a criação da conta de Lucas na Agência 1 não influenciou e nem foi influenciada pelo depósito ou transferência ocorridos na Agência 0.
+  Comparando com o campo `horaParede`, a ordenação física real não condiz com a ordem listada pelo relógio de Lamport. O depósito ocorreu às `19:06:33` (mais cedo), mas foi listado após a criação de conta (`19:15:53`). Isso comprova que, para eventos concorrentes, o relógio de Lamport gera uma ordenação total arbitrária que pode não refletir o tempo físico real.
+
 ---
+
+### 10.3 Perguntas - Parte E (Linha do Tempo Unificada)
+1. **O relógio de Lamport garante que, se A aconteceu antes de B causalmente, `timestamp(A) < timestamp(B)`. Ele não garante a volta. O que isso significa na prática quando você vê dois eventos com timestamps diferentes na linha do tempo, mas sem saber se um realmente influenciou o outro?**
+   * *Resposta:* Significa que, ao visualizar dois eventos na linha do tempo com `timestamp(A) < timestamp(B)` (como um evento com Lamport 2 e outro com Lamport 3), não podemos afirmar que \(A\) causou ou influenciou \(B\). Eles podem ter ocorrido de forma concorrente e isolada. O relógio de Lamport garante a ordem temporal lógica apenas no sentido direto (causa $\rightarrow$ efeito implica timestamp menor), mas a relação inversa (timestamp menor $\rightarrow$ causa) não é garantida.
+
+2. **Baseado no que você observou no passo 3 da tarefa: o relógio de Lamport, sozinho, seria suficiente para um sistema que precisa distinguir com certeza “A e B são concorrentes” de “A aconteceu antes de B”? Por que isso motiva o relógio vetorial do Sprint 2?**
+   * *Resposta:* Não, o relógio de Lamport não é suficiente. Como ele reduz o tempo lógico de todo o sistema a um único número escalar, perdemos a capacidade de rastrear a história causal de forma independente em cada nó. Por causa disso, eventos concorrentes podem receber timestamps menores, maiores ou iguais sem qualquer distinção.
+   * Isso motiva o **Relógio Vetorial** no Sprint 2, onde cada processo mantém um vetor com o estado de tempo de todos os nós. Comparando os vetores de dois eventos, podemos identificar de forma inequívoca se há uma dominância de um vetor sobre o outro (relação causal de anterioridade) ou se os vetores são incomparáveis (relação de concorrência).
