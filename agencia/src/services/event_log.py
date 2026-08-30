@@ -3,6 +3,10 @@ import os
 from datetime import datetime, timezone
 
 
+def get_data_hora() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 class RegistroEventos:
     def __init__(self, nome_agencia: str):
         self.nome_agencia = nome_agencia
@@ -16,14 +20,16 @@ class RegistroEventos:
         )
 
     def registrar(self, tipo: str, timestamp_lamport: int, detalhes: dict) -> dict:
+        data_hora = get_data_hora()
         evento = {
             "agencia": self.nome_agencia,
             "tipo": tipo,
             "timestampLamport": timestamp_lamport,
-            "horaParede": datetime.now(timezone.utc).isoformat(),
+            "horaParede": data_hora,
+            "dataHora": data_hora,
             "detalhes": detalhes,
         }
         with open(self.caminho_arquivo, "a", encoding="utf-8") as arquivo:
             arquivo.write(json.dumps(evento, ensure_ascii=False) + "\n")
-        print(f"[Lamport {timestamp_lamport}] {tipo} {detalhes}")
+        print(f"[Lamport {timestamp_lamport}] {tipo} {detalhes} | {data_hora}")
         return evento
