@@ -10,15 +10,78 @@ O ICEIBank é o primeiro de quatro sprints de um sistema bancário distribuído,
 * **Observabilidade e Falhas:** Existe uma limitação intencional neste sprint: se a agência de destino falhar no meio de uma transferência, o débito da origem não é revertido. Todos os eventos geram logs locais que podem ser mesclados em uma linha do tempo unificada.
 * **Funcionalidade Adicional:** É obrigatório criar ao menos um recurso extra de autoria própria (ex: limite de saque, histórico de transações).
 --- 
-## Estrutura de Pastas do Projeto
+## 📁 Estrutura de Pastas do Projeto
 
-* **`agencia/`**: O código do backend desenvolvido em Python com FastAPI. Aqui ficam as configurações de rotas, os *controllers* (operações bancárias) e os serviços (implementação do Relógio de Lamport e registro de eventos).
-* **`agencia-express/`**: O código de exemplo em Node.js e Express deixado pelo professor, servindo estritamente como material de consulta e referência estrutural.
-* **`frontend/`**: Onde reside o código da interface web, ideal para ser estruturado com frameworks modernos como React ou Next.js.
-* **`evidencias/sprint1/`**: Diretório para armazenar as capturas de tela (prints) que comprovam o funcionamento das transferências, falhas propositais, login JWT e telas do frontend.
-* **`RESPOSTAS.md`**: Arquivo para responder aos questionamentos teóricos do roteiro e documentar a sua funcionalidade adicional.
-* **`data/`** (dentro do backend): Pasta ignorada pelo versionamento (`.gitignore`), destinada a guardar os arquivos de log `.jsonl` gerados dinamicamente durante a execução.
+Abaixo está o esqueleto de diretórios e arquivos que estruturam o projeto:
 
+```text
+ICEIBank/
+├── agencia/                     # Backend Python (FastAPI)
+│   ├── data/                    # Logs de eventos gerados em runtime (ignorado pelo git)
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   ├── contas_controller.py
+│   │   │   └── transferencias_controller.py
+│   │   ├── services/
+│   │   │   ├── auth.py          # Criptografia, geração e validação de tokens JWT
+│   │   │   ├── event_log.py     # Sistema de log de eventos locais da agência
+│   │   │   └── lamport_clock.py  # Relógio lógico de Lamport para tempo parcial
+│   │   ├── config.py            # Configurações de portas e roteamento de agências
+│   │   ├── main.py              # Arquivo principal de execução do backend
+│   │   └── routes.py            # Definição e registro das rotas da API
+│   ├── GUIA.md                  # Instruções de execução do backend em Python
+│   ├── mesclar_logs.py          # Script para mesclar logs em uma linha do tempo unificada
+│   └── requirements.txt         # Dependências de bibliotecas Python
+├── agencia-express/             # Backend de referência em Node.js (material de consulta)
+├── evidencias/
+│   └── sprint1/                 # Capturas de tela provando funcionamento do sistema
+├── frontend/                    # Frontend Web (React + Vite)
+│   ├── src/
+│   │   ├── components/          # Componentes React modulares e reutilizáveis
+│   │   │   ├── AdminPanel.jsx
+│   │   │   ├── AgencySelector.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Header.jsx
+│   │   │   ├── LoginForm.jsx
+│   │   │   ├── StudentPanel.jsx
+│   │   │   └── ToastContainer.jsx
+│   │   ├── App.jsx              # Estado global, roteamento interno e chamadas à API
+│   │   ├── index.css            # Estilização global e injeção do Tailwind CSS
+│   │   └── main.jsx             # Ponto de entrada do React
+│   ├── index.html               # Ponto de entrada HTML com fontes Nunito e Poppins
+│   ├── package.json             # Scripts de build e dependências npm do frontend
+│   └── tailwind.config.js       # Configurações de tema e fontes do Tailwind
+├── LICENSE
+├── README.md
+├── RESPOSTAS.md                 # Questionário do roteiro e descrição de funcionalidade extra
+└── Roteiro_ICEIBank.md
+```
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+* **Linguagem:** Python 3.12+
+* **Framework:** FastAPI (Criação de rotas assíncronas e injeção de dependências)
+* **Servidor ASGI:** Uvicorn
+* **Autenticação:** PyJWT (Criptografia simétrica com algoritmo `HS256`)
+* **Cliente HTTP:** Requests (Comunicação inter-agências)
+* **Validação de Dados:** Pydantic
+
+### Frontend
+* **Biblioteca:** React 18+ (Arquitetura orientada a componentes modulares)
+* **Ferramenta de Build:** Vite
+* **Estilização:** Tailwind CSS & PostCSS
+* **Ícones:** Lucide React
+
+---
+
+## 🤖 Uso de Inteligência Artificial
+
+Este projeto foi desenvolvido em modelo de *pair programming* (programação em par) em colaboração com o **Antigravity**, uma inteligência artificial do time Google DeepMind. A IA colaborou ativamente na tradução dos conceitos de controle e rotas do Express para FastAPI, na modularização estrutural e responsividade do frontend em React e na escrita da documentação do repositório.
+
+---
 
 ## 👥 Autoria
 

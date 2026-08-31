@@ -285,7 +285,7 @@ def consultar_historico(
                 except Exception:
                     pass
 
-    # Ordena por timestampLamport
-    eventos_filtrados.sort(key=lambda x: x.get("timestampLamport", 0))
+    # Ordena por timestampLamport e depois por dataHora (tempo físico)
+    eventos_filtrados.sort(key=lambda x: (x.get("timestampLamport", 0), x.get("dataHora", "")))
     return eventos_filtrados
 

@@ -76,3 +76,21 @@
 * **Decisão sobre Token na Chamada entre Agências (`creditar-remoto`):**
   * *Decisão:* Optou-se por **não exigir** o token JWT do usuário final nas chamadas internas do endpoint `/creditar-remoto` executadas entre os servidores das agências.
   * *Justificativa:* A chamada entre agências é uma operação interna de backend (comunicação máquina-a-máquina). A agência de origem do cliente já realizou toda a autenticação do usuário, validou seus saldos e efetuou o débito local antes de disparar o crédito. Exigir o envio e validação do token do usuário na agência de destino introduziria um acoplamento desnecessário (como compartilhar a mesma chave secreta JWT entre nós ou gerenciar assinaturas assimétricas complexas). Portanto, a transação inter-agências é tratada como confiável por pertencer à infraestrutura de backend.
+
+---
+
+## 12.3 Perguntas - Parte G (Frontend)
+
+1. **Como o frontend “lembra” de reenviar o token em cada requisição depois do login? Descreva, em alto nível, o mecanismo que você implementou.**
+   * *Resposta:* Quando o login é efetuado com sucesso, o token JWT retornado pelo servidor e as credenciais de sessão (como nome do aluno, ID da conta e cargo) são salvos no armazenamento local do navegador (`localStorage`). Em cada requisição subsequente feita às agências, o frontend lê o token do `localStorage` e o insere no cabeçalho HTTP `Authorization: Bearer <token>` de forma automática na nossa função auxiliar `fetchWithAuth`. Isso garante persistência de sessão caso a página seja recarregada.
+
+2. **Se o token expirar enquanto alguém está usando o frontend no meio de uma operação, o que acontece na sua implementação? A interface avisa a pessoa usuária, ou ela só vê um erro genérico?**
+   * *Resposta:* O frontend intercepta todos os retornos de erro da API através da função `fetchWithAuth`. Caso uma chamada retorne status HTTP `401 Unauthorized` (que indica que o token expirou), a interface exibe imediatamente um pop-up (Toast) vermelho com a mensagem amigável "Erro 401: Token expirado.". Em seguida, o código remove o token expirado e as informações de sessão do `localStorage`, limpando os estados da aplicação e redirecionando o usuário de volta para a tela de login. O usuário é, portanto, avisado com clareza na interface.
+
+3. **Esta unidade da disciplina trata de arquitetura MVC. No seu frontend, onde fica o “M” (Model), o “V” (View) e o “C” (Controller)? Eles existem de forma clara na sua implementação, ou o código ficou mais misturado do que o padrão sugere?**
+   * *Resposta:* Em aplicações SPA modernas como as feitas em React, os conceitos da arquitetura MVC ficam mais distribuídos de acordo com o ciclo de vida reativo e baseado em componentes:
+     * **Model (Modelo):** Fica representado pelos estados internos do React (declarados com `useState` para guardar `dadosConta`, `extrato` e a porta ativa) e a persistência em `localStorage`.
+     * **View (Visão):** Representada pelos elementos JSX retornados pelo componente principal `App`, estilizados com classes do Tailwind CSS que definem o layout do dashboard, formulários e as notificações de Toast.
+     * **Controller (Controlador):** Representado pelas funções manipuladoras de formulários e lógica de negócio (`handleLogin`, `handleDeposito`, `handleSaque`, `handleTransferencia` e a função de comunicação `fetchWithAuth`) que alteram os dados do modelo (Model) em resposta às interações do usuário.
+     Embora os papéis estejam claramente definidos, eles se encontram integrados e declarados dentro da estrutura reativa de componentes típica do React.
+
