@@ -1,5 +1,11 @@
 # Respostas - Sprint 1: ICEIBank
 
+## 2.1 Funcionalidade Adicional
+- **Funcionalidade Escolhida:** Histórico de Transações por Conta
+- **Descrição:** Endpoint `GET /contas/{id}/historico` que lista ordenadamente (pelo Relógio de Lamport) todos os eventos de depósito, saque, transferência débito e transferência crédito associados à conta especificada.
+- **Justificativa:** Permite que o usuário consulte seu extrato e acompanhe a ordem lógica de suas transações com clareza no frontend.
+
+---
 
 ### 6.4 Perguntas - Parte B (Relógio de Lamport e Eventos)
 1. **Por que o relógio de Lamport usa `max(contador_local, timestampRecebido) + 1` ao receber uma mensagem, em vez de simplesmente adotar o timestamp recebido diretamente?**

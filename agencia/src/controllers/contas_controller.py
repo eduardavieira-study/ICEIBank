@@ -218,3 +218,74 @@ def sacar(
 
     return conta
 
+
+def consultar_historico(
+    request: Request, id: int, payload: dict = Depends(validar_token)
+):
+    # Autorização: Apenas o dono ou admin podem ver o histórico
+    if not verificar_autorizacao(payload, id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para consultar o histórico desta conta.",
+        )
+
+    contas = request.app.state.contas
+    if id not in contas:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conta não encontrada nesta agência.",
+        )
+
+    registro = request.app.state.registro
+    caminho_arquivo = registro.caminho_arquivo
+    eventos_filtrados = []
+
+    if os.path.exists(caminho_arquivo):
+        with open(caminho_arquivo, "r", encoding="utf-8") as f:
+            for linha in f:
+                linha = linha.strip()
+                if not linha:
+                    continue
+                try:
+                    evento = json.loads(linha)
+                    detalhes = evento.get("detalhes", {})
+                    tipo = evento.get("tipo", "")
+
+                    # Filtra eventos associados a esta conta
+                    envolvido = False
+                    if tipo == "CRIAR_CONTA" and detalhes.get("id") == id:
+                        envolvido = True
+                    elif tipo == "DEPOSITO" and detalhes.get("id") == id:
+                        envolvido = True
+                    elif tipo == "SAQUE" and detalhes.get("id") == id:
+                        envolvido = True
+                    elif (
+                        tipo == "TRANSFERENCIA_DEBITO"
+                        and detalhes.get("idOrigem") == id
+                    ):
+                        envolvido = True
+                    elif tipo == "TRANSFERENCIA_CREDITO" and (
+                        detalhes.get("idDestino") == id
+                        or detalhes.get("idOrigem") == id
+                    ):
+                        envolvido = True
+                    elif (
+                        tipo == "TRANSFERENCIA_CREDITO_REMOTO"
+                        and detalhes.get("idConta") == id
+                    ):
+                        envolvido = True
+                    elif (
+                        tipo == "TRANSFERENCIA_FALHOU"
+                        and detalhes.get("idOrigem") == id
+                    ):
+                        envolvido = True
+
+                    if envolvido:
+                        eventos_filtrados.append(evento)
+                except Exception:
+                    pass
+
+    # Ordena por timestampLamport
+    eventos_filtrados.sort(key=lambda x: x.get("timestampLamport", 0))
+    return eventos_filtrados
+

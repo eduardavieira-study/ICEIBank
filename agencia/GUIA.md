@@ -78,3 +78,44 @@ $expiredToken = $loginResExp.token
 $headersExp = @{ Authorization = "Bearer $expiredToken" }
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get -Headers $headersExp
 ```
+
+Testar Historico
+
+Logar e criar conta 
+```
+# 1. Faz login como admin
+$loginRes = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"usuario": "admin", "senha": "admin"}'
+$adminToken = $loginRes.token
+$headersAdmin = @{ Authorization = "Bearer $adminToken" }
+
+# 2. Cria a conta 0 (Ana) com saldo inicial de 100.0
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "saldoInicial": 100.0}' -Headers $headersAdmin
+```
+Realizar Movimentações na Conta (Gerar Eventos)
+```
+# 1. Deposita 50.0 na conta 0 (usando token de admin para autorizar)
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0/depositar" -Method Post -ContentType "application/json" -Body '{"valor": 50.0}' -Headers $headersAdmin
+
+# 2. Saca 20.0 da conta 0 (usando token de admin para autorizar)
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0/sacar" -Method Post -ContentType "application/json" -Body '{"valor": 20.0}' -Headers $headersAdmin
+```
+
+Obter o Token da Ana (Dona da Conta)
+```
+# 1. Faz login como a Ana
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "nomeAluno": "Ana"}'
+$userToken = $loginResUser.token
+$headersUser = @{ Authorization = "Bearer $userToken" }
+```
+
+Consultar o Histórico Autorizado
+```
+# Consulta o histórico (extrato) da conta 0
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0/historico" -Method Get -Headers $headersUser
+```
+
+Testa consultar histórico sem token
+```
+# Tenta consultar o histórico sem cabeçalho Authorization
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0/historico" -Method Get
+```
