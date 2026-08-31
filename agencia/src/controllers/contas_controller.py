@@ -1,8 +1,9 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Depends
 from pydantic import BaseModel
 import agencia.src.config as config
 import os
 import json
+from agencia.src.services.auth import gerar_token, validar_token, verificar_autorizacao
 
 
 class CriarContaRequest(BaseModel):
@@ -15,7 +16,71 @@ class TransacaoRequest(BaseModel):
     valor: float
 
 
-def criar_conta(request: Request, body: CriarContaRequest):
+class LoginRequest(BaseModel):
+    usuario: str = None
+    senha: str = None
+    idConta: int = None
+    nomeAluno: str = None
+    expirar_em_segundos: int = 1800
+
+
+def login(request: Request, body: LoginRequest):
+    contas = request.app.state.contas
+    id_agencia = request.app.state.id_agencia
+    exp_seconds = body.expirar_em_segundos
+
+    # Login de Administrador
+    if body.usuario == "admin" and body.senha == "admin":
+        token = gerar_token("admin", role="admin", expires_in_seconds=exp_seconds)
+        return {"token": token, "role": "admin", "usuario": "admin"}
+
+    # Login de Aluno
+    if body.idConta is not None and body.nomeAluno is not None:
+        id_conta = body.idConta
+        nome_aluno = body.nomeAluno
+
+        # Verifica se esta agência é responsável pela conta
+        if config.agencia_responsavel(id_conta) != id_agencia:
+            agencia_correta = config.agencia_responsavel(id_conta)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Esta conta pertence à Agência {agencia_correta}. Por favor, faça login na porta correspondente.",
+            )
+
+        conta = contas.get(id_conta)
+        if (
+            not conta
+            or conta["nomeAluno"].strip().lower() != nome_aluno.strip().lower()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciais inválidas para a conta informada nesta agência.",
+            )
+
+        token = gerar_token(id_conta, role="user", expires_in_seconds=exp_seconds)
+        return {
+            "token": token,
+            "role": "user",
+            "idConta": id_conta,
+            "nomeAluno": conta["nomeAluno"],
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Credenciais de login incompletas.",
+    )
+
+
+def criar_conta(
+    request: Request, body: CriarContaRequest, payload: dict = Depends(validar_token)
+):
+    # Autorização: Apenas administradores podem criar contas
+    if payload.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem criar contas no sistema.",
+        )
+
     id_conta = body.id
     nome_aluno = body.nomeAluno
     saldo_inicial = body.saldoInicial
@@ -49,7 +114,14 @@ def criar_conta(request: Request, body: CriarContaRequest):
     return conta
 
 
-def consultar_saldo(request: Request, id: int):
+def consultar_saldo(request: Request, id: int, payload: dict = Depends(validar_token)):
+    # Autorização: O próprio dono ou admin podem ver o saldo
+    if not verificar_autorizacao(payload, id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para consultar o saldo desta conta.",
+        )
+
     contas = request.app.state.contas
     if id not in contas:
         raise HTTPException(
@@ -59,7 +131,20 @@ def consultar_saldo(request: Request, id: int):
     return contas[id]
 
 
-def depositar(request: Request, id: int, body: TransacaoRequest):
+def depositar(
+    request: Request,
+    id: int,
+    body: TransacaoRequest,
+    payload: dict = Depends(validar_token),
+):
+    # Autorização: Qualquer pessoa autenticada pode depositar para qualquer pessoa no banco, ou limitamos ao dono?
+    # Para o laboratório, vamos permitir que apenas o próprio dono ou o admin façam a transação.
+    if not verificar_autorizacao(payload, id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para realizar depósitos nesta conta.",
+        )
+
     valor = body.valor
     contas = request.app.state.contas
     relogio = request.app.state.relogio
@@ -88,7 +173,19 @@ def depositar(request: Request, id: int, body: TransacaoRequest):
     return conta
 
 
-def sacar(request: Request, id: int, body: TransacaoRequest):
+def sacar(
+    request: Request,
+    id: int,
+    body: TransacaoRequest,
+    payload: dict = Depends(validar_token),
+):
+    # Autorização: Apenas o dono ou admin podem sacar
+    if not verificar_autorizacao(payload, id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para realizar saques nesta conta.",
+        )
+
     valor = body.valor
     contas = request.app.state.contas
     relogio = request.app.state.relogio
@@ -121,64 +218,3 @@ def sacar(request: Request, id: int, body: TransacaoRequest):
 
     return conta
 
-
-def consultar_historico(request: Request, id: int):
-    contas = request.app.state.contas
-    if id not in contas:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conta não encontrada nesta agência.",
-        )
-
-    registro = request.app.state.registro
-    caminho_arquivo = registro.caminho_arquivo
-    eventos_filtrados = []
-
-    if os.path.exists(caminho_arquivo):
-        with open(caminho_arquivo, "r", encoding="utf-8") as f:
-            for linha in f:
-                linha = linha.strip()
-                if not linha:
-                    continue
-                try:
-                    evento = json.loads(linha)
-                    detalhes = evento.get("detalhes", {})
-                    tipo = evento.get("tipo", "")
-
-                    # Filtra eventos associados a esta conta
-                    envolvido = False
-                    if tipo == "CRIAR_CONTA" and detalhes.get("id") == id:
-                        envolvido = True
-                    elif tipo == "DEPOSITO" and detalhes.get("id") == id:
-                        envolvido = True
-                    elif tipo == "SAQUE" and detalhes.get("id") == id:
-                        envolvido = True
-                    elif (
-                        tipo == "TRANSFERENCIA_DEBITO"
-                        and detalhes.get("idOrigem") == id
-                    ):
-                        envolvido = True
-                    elif tipo == "TRANSFERENCIA_CREDITO" and (
-                        detalhes.get("idDestino") == id
-                        or detalhes.get("idOrigem") == id
-                    ):
-                        envolvido = True
-                    elif (
-                        tipo == "TRANSFERENCIA_CREDITO_REMOTO"
-                        and detalhes.get("idConta") == id
-                    ):
-                        envolvido = True
-                    elif (
-                        tipo == "TRANSFERENCIA_FALHOU"
-                        and detalhes.get("idOrigem") == id
-                    ):
-                        envolvido = True
-
-                    if envolvido:
-                        eventos_filtrados.append(evento)
-                except Exception:
-                    pass
-
-    # Ordena por timestampLamport
-    eventos_filtrados.sort(key=lambda x: x.get("timestampLamport", 0))
-    return eventos_filtrados

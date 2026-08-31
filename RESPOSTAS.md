@@ -42,3 +42,31 @@
 2. **Baseado no que você observou no passo 3 da tarefa: o relógio de Lamport, sozinho, seria suficiente para um sistema que precisa distinguir com certeza “A e B são concorrentes” de “A aconteceu antes de B”? Por que isso motiva o relógio vetorial do Sprint 2?**
    * *Resposta:* Não, o relógio de Lamport não é suficiente. Como ele reduz o tempo lógico de todo o sistema a um único número escalar, perdemos a capacidade de rastrear a história causal de forma independente em cada nó. Por causa disso, eventos concorrentes podem receber timestamps menores, maiores ou iguais sem qualquer distinção.
    * Isso motiva o **Relógio Vetorial** no Sprint 2, onde cada processo mantém um vetor com o estado de tempo de todos os nós. Comparando os vetores de dois eventos, podemos identificar de forma inequívoca se há uma dominância de um vetor sobre o outro (relação causal de anterioridade) ou se os vetores são incomparáveis (relação de concorrência).
+
+---
+
+## 11.3 Perguntas - Parte F (Autenticação JWT)
+
+1. **Qual a diferença entre autenticação e autorização? Sua implementação verifica só uma das duas, ou as duas? Por exemplo: um usuário autenticado consegue sacar de uma conta que não é dele, na sua implementação atual?**
+   * *Resposta:* A **autenticação** consiste no processo de identificar um usuário (ex.: confirmar que ele de fato é quem diz ser a partir de uma senha ou token). A **autorização** é o processo seguinte que valida se o usuário autenticado de fato possui permissão para executar a ação solicitada sobre aquele recurso específico (ex.: verificar privilégios de acesso).
+   * Nossa implementação realiza **ambas as verificações**: primeiro o token JWT é decodificado e validado (autenticação). Em seguida, a função `verificar_autorizacao` valida se o `sub` do token confere com o ID da conta informada na rota (ou se possui a role `"admin"`). Portanto, na nossa implementação atual, um usuário comum autenticado **não consegue** sacar de uma conta que não seja a dele (a API retorna HTTP 403 Forbidden).
+
+2. **Por que o servidor não precisa consultar um banco de dados para validar a assinatura de um JWT a cada requisição? O que isso implica sobre escalabilidade, comparado a guardar sessões em memória no servidor?**
+   * *Resposta:* O JWT é assinado digitalmente com uma chave secreta mantida no servidor usando algoritmos de hashing criptográfico. Quando uma requisição chega com o token, o servidor pode verificar se o conteúdo não foi adulterado simplesmente recalculando a assinatura localmente e comparando-a com a assinatura contida no próprio token. Como a validação é puramente local e matemática, não há necessidade de consultas a banco de dados a cada requisição.
+   * Isso implica em uma **escalabilidade massivamente superior** se comparada a sessões em memória. Em um sistema com sessões no servidor, os dados das sessões precisam ser mantidos na memória RAM de um nó ou sincronizados/consultados em um cache centralizado (como Redis). Consequentemente, o uso de JWT torna a arquitetura totalmente *stateless* (sem estado), o que permite adicionar novos nós de servidor sem qualquer necessidade de compartilhamento ou sincronização de sessões, pois qualquer nó com acesso à chave secreta pode validar qualquer token de forma 100% autônoma.
+
+3. **O que aconteceria com a segurança do sistema se a chave secreta usada para assinar o JWT vazasse?**
+   * *Resposta:* Se a chave secreta vazasse, a segurança do sistema estaria **completamente comprometida**. Um atacante de posse da chave poderia criar e assinar tokens válidos à sua escolha, fingindo ser qualquer usuário (incluindo administrador) com acesso total de criação, débito, saque e alteração de saldo em todas as agências sem restrições. Para reestabelecer a segurança, a chave secreta deveria ser rotacionada imediatamente no ambiente e todas as instâncias do servidor seriam reiniciadas, o que invalidaria instantaneamente todos os tokens antigos em circulação.
+
+
+---
+
+## 11.4 Justificativas de Design (Parte F)
+
+* **Escolha do Formato de Credenciais de Login:**
+  * *Decisão:* Para o administrador, foi utilizado o par de usuário/senha fixos (`"admin"` / `"admin"`). Para os usuários (alunos), optou-se por um modelo baseado no identificador da conta (`idConta`) e no nome do aluno (`nomeAluno`), sem a exigência de uma senha neste estágio.
+  * *Justificativa:* Como as contas do ICEIBank são criadas em memória durante a execução do servidor e não possuem campos de senha persistidos na modelagem inicial (definida na Parte C), o par `idConta` + `nomeAluno` funciona como uma credencial inicial perfeitamente adequada para o escopo educacional do laboratório, evitando adicionar a complexidade de gerenciar e persistir hashes de senhas antes da introdução de bancos de dados persistentes.
+
+* **Decisão sobre Token na Chamada entre Agências (`creditar-remoto`):**
+  * *Decisão:* Optou-se por **não exigir** o token JWT do usuário final nas chamadas internas do endpoint `/creditar-remoto` executadas entre os servidores das agências.
+  * *Justificativa:* A chamada entre agências é uma operação interna de backend (comunicação máquina-a-máquina). A agência de origem do cliente já realizou toda a autenticação do usuário, validou seus saldos e efetuou o débito local antes de disparar o crédito. Exigir o envio e validação do token do usuário na agência de destino introduziria um acoplamento desnecessário (como compartilhar a mesma chave secreta JWT entre nós ou gerenciar assinaturas assimétricas complexas). Portanto, a transação inter-agências é tratada como confiável por pertencer à infraestrutura de backend.

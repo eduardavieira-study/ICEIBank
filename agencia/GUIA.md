@@ -44,3 +44,37 @@ Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType 
 Invoke-RestMethod -Uri "http://localhost:4074/transferencias" -Method Post -ContentType "application/json" -Body '{"idOrigem":0,"idDestino":1,"valor":10}'
 
 Invoke-RestMethod -Uri "http://localhost:4075/transferencias" -Method Post -ContentType "application/json" -Body '{"idOrigem":1,"idDestino":4,"valor":15}'
+
+### Testes com autenticação
+```
+# Sem Token
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get
+```
+---
+Token Válido
+```
+# A. Login como Admin e criação da conta 0
+$loginRes = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"usuario": "admin", "senha": "admin"}'
+$adminToken = $loginRes.token
+$headers = @{ Authorization = "Bearer $adminToken" }
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "saldoInicial": 100.0}' -Headers $headers
+
+# B. Login como a Ana e consulta de saldo usando seu próprio token
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "nomeAluno": "Ana"}'
+$userToken = $loginResUser.token
+$headersUser = @{ Authorization = "Bearer $userToken" }
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get -Headers $headersUser
+```
+Token Expirado (401)
+
+```
+# 1. Faz login como admin pedindo o token já expirado (-10 segundos)
+$loginResExp = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"usuario": "admin", "senha": "admin", "expirar_em_segundos": -10}'
+
+# 2. Extrai o token gerado
+$expiredToken = $loginResExp.token
+
+# 3. Tenta acessar com o token expirado
+$headersExp = @{ Authorization = "Bearer $expiredToken" }
+Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get -Headers $headersExp
+```
