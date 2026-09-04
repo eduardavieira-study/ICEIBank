@@ -15,7 +15,8 @@ export default function LoginForm({
   expirarEmSegundos,
   setExpirarEmSegundos,
   handleLogin,
-  addToast
+  addToast,
+  isDark = true
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,19 +52,25 @@ export default function LoginForm({
   };
 
   return (
-    <div className="max-w-md mx-auto bg-gray-950 rounded-lg shadow-2xl border border-gray-800 overflow-hidden mt-8">
-      <div className="bg-puc-blue p-6 text-white text-center border-b border-gray-800">
+    <div className={`max-w-md mx-auto rounded-lg shadow-lg border overflow-hidden mt-8 transition ${
+      isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+    }`}>
+      <div className={`bg-puc-blue p-6 text-white text-center border-b ${isDark ? 'border-gray-800' : 'border-slate-200'}`}>
         <h2 className="text-lg font-bold">Portal de Acesso ICEIBank</h2>
         <p className="text-xs text-slate-300 mt-1">Conecte-se como titular ou administrador de sistema</p>
       </div>
 
       <div className="p-6">
         {/* TABS ADMIN/USER */}
-        <div className="flex bg-gray-900 p-1.5 rounded-lg mb-6 border border-gray-800">
+        <div className={`flex p-1.5 rounded-lg mb-6 ${isDark ? 'bg-gray-900' : 'bg-slate-100'}`}>
           <button
             type="button"
             onClick={() => setIsAdminMode(false)}
-            className={`flex-1 flex justify-center items-center gap-2 py-2 text-xs font-semibold rounded-md transition ${!isAdminMode ? 'bg-gray-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`flex-1 flex justify-center items-center gap-2 py-2 text-xs font-semibold rounded-md transition ${
+              !isAdminMode 
+                ? (isDark ? 'bg-gray-800 text-white shadow' : 'bg-white text-puc-blue shadow') 
+                : (isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-500 hover:text-slate-800')
+            }`}
           >
             <User size={14} />
             Área do Aluno (Titular)
@@ -71,7 +78,11 @@ export default function LoginForm({
           <button
             type="button"
             onClick={() => setIsAdminMode(true)}
-            className={`flex-1 flex justify-center items-center gap-2 py-2 text-xs font-semibold rounded-md transition ${isAdminMode ? 'bg-gray-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`flex-1 flex justify-center items-center gap-2 py-2 text-xs font-semibold rounded-md transition ${
+              isAdminMode 
+                ? (isDark ? 'bg-gray-800 text-white shadow' : 'bg-white text-puc-blue shadow') 
+                : (isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-500 hover:text-slate-800')
+            }`}
           >
             <Shield size={14} />
             Administração
@@ -82,30 +93,44 @@ export default function LoginForm({
           {isAdminMode ? (
             <>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">Nome de Usuário</label>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                  Nome de Usuário
+                </label>
                 <input 
                   type="text" 
                   value={loginUser}
                   onChange={(e) => setLoginUser(e.target.value)}
                   placeholder="admin" 
-                  className="w-full text-sm border border-gray-800 bg-neutral-900/60 text-white rounded p-2 focus:ring-2 focus:ring-puc-accent focus:outline-none placeholder:text-gray-600"
+                  className={`w-full text-sm border rounded p-2 focus:ring-2 focus:ring-puc-blue focus:outline-none ${
+                    isDark 
+                      ? 'border-gray-800 bg-neutral-900/50 text-white' 
+                      : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">Senha Administrativa</label>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                  Senha Administrativa
+                </label>
                 <input 
                   type="password" 
                   value={loginPass}
                   onChange={(e) => setLoginPass(e.target.value)}
                   placeholder="••••••••" 
-                  className="w-full text-sm border border-gray-800 bg-neutral-900/60 text-white rounded p-2 focus:ring-2 focus:ring-puc-accent focus:outline-none placeholder:text-gray-600"
+                  className={`w-full text-sm border rounded p-2 focus:ring-2 focus:ring-puc-blue focus:outline-none ${
+                    isDark 
+                      ? 'border-gray-800 bg-neutral-900/50 text-white' 
+                      : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                 />
               </div>
             </>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">Número da Conta</label>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                  Número da Conta
+                </label>
                 <input 
                   type="number" 
                   min="0"
@@ -114,35 +139,61 @@ export default function LoginForm({
                   value={loginIdConta}
                   onChange={handleIdContaChange}
                   placeholder="Ex: 0" 
-                  className="w-full text-sm border border-gray-800 bg-neutral-900/60 text-white rounded p-2 focus:ring-2 focus:ring-puc-accent focus:outline-none placeholder:text-gray-600"
+                  className={`w-full text-sm border rounded p-2 focus:ring-2 focus:ring-puc-blue focus:outline-none ${
+                    isDark 
+                      ? 'border-gray-800 bg-neutral-900/50 text-white' 
+                      : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                 />
-                <p className="text-[10px] text-neutral-400 mt-1">Sua conta deve ser associada a esta agência ativa (id_conta % 3 == ID_agencia)</p>
+                <p className={`text-[10px] mt-0.5 ${isDark ? 'text-neutral-300' : 'text-slate-400'}`}>
+                  Sua conta deve ser associada a esta agência ativa (id_conta % 3 == ID_agencia)
+                </p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">Nome Completo do Aluno</label>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                  Nome Completo do Aluno
+                </label>
                 <input 
                   type="text" 
                   value={loginNomeAluno}
                   onChange={(e) => setLoginNomeAluno(e.target.value)}
                   placeholder="Ex: Ana" 
-                  className="w-full text-sm border border-gray-800 rounded bg-neutral-900/60 text-white p-2 focus:ring-2 focus:ring-puc-accent focus:outline-none placeholder:text-gray-600"
+                  className={`w-full text-sm border rounded p-2 focus:ring-2 focus:ring-puc-blue focus:outline-none ${
+                    isDark 
+                      ? 'border-gray-800 bg-neutral-900/50 text-white' 
+                      : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                 />
               </div>
             </>
           )}
 
           {/* SIMULADOR DE EXPIRAÇÃO - APENAS PARA FINS DE TESTE DO SPRINT */}
-          <div className="bg-amber-950/40 rounded p-3 border border-amber-900/60 mt-4">
-            <span className="block text-[11px] font-bold text-orange-300/90 mb-1.5 flex items-center gap-1">
+          <div className={`rounded p-3 border mt-4 ${
+            isDark 
+              ? 'bg-amber-950/90 border-amber-900' 
+              : 'bg-amber-50 border-amber-200'
+          }`}>
+            <span className={`block text-[11px] font-bold mb-1.5 flex items-center gap-1 ${
+              isDark ? 'text-amber-100' : 'text-amber-800'
+            }`}>
               <AlertTriangle size={12} />
               Configuração de Testes (Validade do Token)
             </span>
             <div className="flex items-center gap-2">
-              <label className="text-[10px] text-amber-100 font-semibold whitespace-nowrap">Tempo de expiração:</label>
+              <label className={`text-[10px] font-semibold whitespace-nowrap ${
+                isDark ? 'text-amber-100' : 'text-amber-800'
+              }`}>
+                Tempo de expiração:
+              </label>
               <select
                 value={expirarEmSegundos}
                 onChange={(e) => setExpirarEmSegundos(parseInt(e.target.value, 10))}
-                className="w-full text-[11px] bg-amber-950 border border-amber-900/70 rounded py-1 px-1.5 focus:outline-none text-amber-50"
+                className={`w-full text-[11px] border rounded py-0.5 px-1 focus:outline-none ${
+                  isDark 
+                    ? 'bg-amber-900/65 border-amber-800 text-amber-100' 
+                    : 'bg-amber-100/60 border-amber-300 text-amber-900'
+                }`}
               >
                 <option value="1800">Padrão (30 Minutos)</option>
                 <option value="5">Curto (5 Segundos)</option>
@@ -153,7 +204,11 @@ export default function LoginForm({
 
           <button
             type="submit"
-            className="w-full bg-puc-accent/80 hover:bg-puc-accent text-white font-bold py-2.5 rounded shadow-lg transition text-sm mt-6"
+            className={`w-full text-white font-bold py-3 rounded shadow transition text-sm mt-6 ${
+              isDark 
+                ? 'bg-puc-accent/50 hover:bg-puc-accent/80' 
+                : 'bg-puc-blue hover:bg-blue-800'
+            }`}
           >
             Entrar no Sistema
           </button>

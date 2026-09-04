@@ -15,6 +15,31 @@ const AGENCIAS = [
 ];
 
 export default function App() {
+  // Tema Claro / Escuro (Padrão: Escuro conforme preferência)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('ICEIBANK_THEME') || 'dark';
+  });
+
+  const isDark = theme === 'dark';
+
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('ICEIBANK_THEME', next);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.style.backgroundColor = '#000000';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.style.backgroundColor = '#f1f5f9';
+    }
+  }, [theme]);
+
   // Configurações Globais (Porta Ativa)
   const [portaAgencia, setPortaAgencia] = useState(() => {
     return parseInt(localStorage.getItem('ICEIBANK_PORTA') || '4074', 10);
@@ -343,7 +368,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-between">
+    <div className={`min-h-screen flex flex-col justify-between transition-colors duration-200 ${
+      isDark ? 'bg-black text-slate-100' : 'bg-slate-100 text-slate-900'
+    }`}>
       
       {/* HEADER COMPONENTE */}
       <Header 
@@ -352,6 +379,8 @@ export default function App() {
         agencias={AGENCIAS}
         token={token}
         handleLogout={handleLogout}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
       />
 
       {/* ÁREA DE CONTEÚDO */}
@@ -374,6 +403,7 @@ export default function App() {
             setExpirarEmSegundos={setExpirarEmSegundos}
             handleLogin={handleLogin}
             addToast={addToast}
+            isDark={isDark}
           />
         )}
 
@@ -388,6 +418,7 @@ export default function App() {
             newAccountBalance={newAccountBalance}
             setNewAccountBalance={setNewAccountBalance}
             handleCriarConta={handleCriarConta}
+            isDark={isDark}
           />
         )}
 
@@ -411,16 +442,17 @@ export default function App() {
             setTransferValor={setTransferValor}
             handleTransferencia={handleTransferencia}
             extrato={extrato}
+            isDark={isDark}
           />
         )}
 
       </main>
 
       {/* FOOTER COMPONENTE */}
-      <Footer />
+      <Footer isDark={isDark} />
 
       {/* POP-UPS / TOASTS */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} removeToast={removeToast} isDark={isDark} />
 
     </div>
   );

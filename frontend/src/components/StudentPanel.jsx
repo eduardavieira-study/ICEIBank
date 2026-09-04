@@ -24,7 +24,8 @@ export default function StudentPanel({
   transferValor,
   setTransferValor,
   handleTransferencia,
-  extrato
+  extrato,
+  isDark = true
 }) {
   const blockNegativeAndDecimals = (e) => {
     if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') {
@@ -45,43 +46,53 @@ export default function StudentPanel({
       <div className="lg:col-span-2 space-y-6">
         
         {/* CARD DE SALDO */}
-        <div className="bg-gray-950 rounded-lg shadow-2xl border border-gray-800 p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-900/40 rounded-full -mr-8 -mt-8 -z-10 opacity-50"></div>
+        <div className={`rounded-lg shadow border p-6 relative overflow-hidden transition ${
+          isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+        }`}>
+          <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-8 -mt-8 -z-10 opacity-50 ${
+            isDark ? 'bg-neutral-900/40' : 'bg-slate-100'
+          }`}></div>
           
           <div className="flex justify-between items-start mb-6">
             <div>
-              <span className="text-[10px] uppercase font-bold text-gray-300">Conta Ativa</span>
-              <h2 className="text-2xl font-bold text-white mt-0.5">{nomeAluno}</h2>
-              <p className="text-xs text-neutral-400">ID da Conta: #{idConta} • Responsável: Agência {idConta % 3}</p>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Conta Ativa</span>
+              <h2 className={`text-2xl font-bold mt-0.5 ${isDark ? 'text-white' : 'text-puc-blue'}`}>{nomeAluno}</h2>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>ID da Conta: #{idConta} • Responsável: Agência {idConta % 3}</p>
             </div>
             <button 
               onClick={carregarDadosConta}
               disabled={loadingConta}
-              className="p-2 hover:bg-gray-800 rounded text-slate-400 hover:text-white transition"
+              className={`p-2 rounded transition ${
+                isDark ? 'hover:bg-gray-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'
+              }`}
               title="Atualizar Dados"
             >
               <RefreshCw size={16} className={loadingConta ? 'animate-spin' : ''} />
             </button>
           </div>
 
-          <div className="bg-gray-900/50 rounded-lg p-5 border border-gray-800 flex items-center justify-between">
+          <div className={`rounded-lg p-5 border flex items-center justify-between ${
+            isDark ? 'bg-gray-900/50 border-gray-800' : 'bg-slate-50 border-slate-100'
+          }`}>
             <div>
-              <span className="text-xs text-neutral-300 font-semibold">Saldo Disponível</span>
-              <p className="text-3xl font-extrabold text-white mt-1">
+              <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>Saldo Disponível</span>
+              <p className={`text-3xl font-extrabold mt-1 ${isDark ? 'text-white' : 'text-puc-blue'}`}>
                 R$ {dadosConta ? dadosConta.saldo.toFixed(2) : '0,00'}
               </p>
             </div>
-            <Coins size={36} className="text-amber-400 opacity-90" />
+            <Coins size={36} className="text-amber-500 opacity-80" />
           </div>
         </div>
 
         {/* CARD DE MOVIMENTAÇÕES (SAQUE / DEPÓSITO) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* DEPÓSITO */}
-          <div className="bg-green-950/50 rounded-lg shadow-2xl border border-green-800/50 p-5">
-            <h3 className="text-sm font-bold text-neutral-100 mb-3 flex items-center gap-1.5">
-              <PlusCircle size={16} className="text-emerald-400" />
+          {/* DEPÓSITO (VERDE) */}
+          <div className={`rounded-lg shadow border p-5 transition ${
+            isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+          }`}>
+            <h3 className={`text-sm font-bold mb-3 flex items-center gap-1.5 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+              <PlusCircle size={16} className="text-green-600" />
               Efetuar Depósito
             </h3>
             <form onSubmit={handleDeposito} className="space-y-3">
@@ -90,6 +101,7 @@ export default function StudentPanel({
                   type="number" 
                   step="0.01"
                   min="0"
+                  onWheel={(e) => e.currentTarget.blur()}
                   onKeyDown={blockNegative}
                   value={valorDeposito}
                   onChange={(e) => {
@@ -99,23 +111,27 @@ export default function StudentPanel({
                     }
                   }}
                   placeholder="Valor (R$)"
-                  className="w-full text-xs border border-green-800/50 bg-gray-900/30 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-700 placeholder:text-neutral-100"
+                  className={`w-full text-xs border rounded p-2 focus:outline-none focus:ring-2 focus:ring-puc-blue ${
+                    isDark ? 'border-gray-800 bg-neutral-900/50 text-white' : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                   required
                 />
               </div>
               <button 
                 type="submit"
-                className="w-full bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold py-2 rounded shadow transition text-xs"
+                className="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded shadow transition text-xs"
               >
                 Depositar
               </button>
             </form>
           </div>
 
-          {/* SAQUE */}
-          <div className="bg-orange-950/50 rounded-lg shadow-2xl border border-orange-800/50 p-5">
-            <h3 className="text-sm font-bold text-neutral-100 mb-3 flex items-center gap-1.5">
-              <Coins size={16} className="text-orange-400" />
+          {/* SAQUE (LARANJA) */}
+          <div className={`rounded-lg shadow border p-5 transition ${
+            isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+          }`}>
+            <h3 className={`text-sm font-bold mb-3 flex items-center gap-1.5 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+              <Coins size={16} className="text-orange-500" />
               Efetuar Saque
             </h3>
             <form onSubmit={handleSaque} className="space-y-3">
@@ -124,6 +140,7 @@ export default function StudentPanel({
                   type="number" 
                   step="0.01"
                   min="0"
+                  onWheel={(e) => e.currentTarget.blur()}
                   onKeyDown={blockNegative}
                   value={valorSaque}
                   onChange={(e) => {
@@ -133,13 +150,15 @@ export default function StudentPanel({
                     }
                   }}
                   placeholder="Valor (R$)"
-                  className="w-full text-xs border border-orange-800/50 bg-neutral-900/30 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-orange-800 placeholder:text-neutral-100"
+                  className={`w-full text-xs border rounded p-2 focus:outline-none focus:ring-2 focus:ring-puc-blue ${
+                    isDark ? 'border-gray-800 bg-neutral-900/50 text-white' : 'border-slate-300 bg-white text-slate-900'
+                  }`}
                   required
                 />
               </div>
               <button 
                 type="submit"
-                className="w-full bg-orange-800/80 hover:bg-orange-700 text-white font-bold py-2 rounded shadow transition text-xs"
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded shadow transition text-xs"
               >
                 Sacar
               </button>
@@ -149,9 +168,11 @@ export default function StudentPanel({
         </div>
 
         {/* CARD DE TRANSFERÊNCIA */}
-        <div className="bg-gray-950 rounded-lg shadow-2xl border border-gray-800 p-6">
-          <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-            <ArrowRightLeft size={16} className="text-blue-400" />
+        <div className={`rounded-lg shadow border p-6 transition ${
+          isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+        }`}>
+          <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+            <ArrowRightLeft size={16} className="text-puc-accent" />
             Realizar Transferência
           </h3>
           <p className="text-[11px] text-slate-400 mb-4">
@@ -160,10 +181,13 @@ export default function StudentPanel({
           
           <form onSubmit={handleTransferencia} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-slate-300 mb-1">ID da Conta de Destino</label>
+              <label className={`block text-[10px] font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                ID da Conta de Destino
+              </label>
               <input 
                 type="number" 
                 min="0"
+                onWheel={(e) => e.currentTarget.blur()}
                 onKeyDown={blockNegativeAndDecimals}
                 value={transferDestId}
                 onChange={(e) => {
@@ -173,16 +197,21 @@ export default function StudentPanel({
                   }
                 }}
                 placeholder="Ex: 1"
-                className="w-full text-xs border border-gray-800 bg-neutral-900/60 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-800/80 placeholder:text-gray-600"
+                className={`w-full text-xs border rounded p-2 focus:outline-none focus:ring-2 focus:ring-puc-blue ${
+                  isDark ? 'border-gray-800 bg-neutral-900/50 text-white' : 'border-slate-300 bg-white text-slate-900'
+                }`}
                 required
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-300 mb-1">Valor (R$)</label>
+              <label className={`block text-[10px] font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Valor (R$)
+              </label>
               <input 
                 type="number" 
                 step="0.01"
                 min="0"
+                onWheel={(e) => e.currentTarget.blur()}
                 onKeyDown={blockNegative}
                 value={transferValor}
                 onChange={(e) => {
@@ -192,14 +221,16 @@ export default function StudentPanel({
                   }
                 }}
                 placeholder="0,00"
-                className="w-full text-xs border border-gray-800 bg-neutral-900/60 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-800/80 placeholder:text-gray-600"
+                className={`w-full text-xs border rounded p-2 focus:outline-none focus:ring-2 focus:ring-puc-blue ${
+                  isDark ? 'border-gray-800 bg-neutral-900/50 text-white' : 'border-slate-300 bg-white text-slate-900'
+                }`}
                 required
               />
             </div>
             <div className="sm:col-span-2 flex justify-end pt-1">
               <button 
                 type="submit"
-                className="bg-puc-accent/80 hover:bg-puc-accent text-white font-bold py-2 px-6 rounded shadow transition text-xs"
+                className="bg-puc-blue hover:bg-puc-accent text-white font-bold py-2 px-6 rounded shadow transition text-xs"
               >
                 Enviar Dinheiro
               </button>
@@ -210,34 +241,47 @@ export default function StudentPanel({
       </div>
 
       {/* COLUNA DIREITA: EXTRATO / HISTÓRICO DE EVENTOS */}
-      <div className="bg-gray-950/90 rounded-lg shadow-2xl border border-gray-800 p-6 flex flex-col justify-between max-h-[500px]">
+      <div className={`rounded-lg shadow border p-6 flex flex-col justify-between max-h-[500px] transition ${
+        isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-slate-200'
+      }`}>
         <div>
-          <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-amber-400" />
+          <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+            <Clock size={16} className="text-amber-500" />
             Histórico (Relógio de Lamport)
           </h3>
           
           {extrato.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-xs">
+            <div className="text-center py-12 text-slate-400 text-xs">
               Nenhuma transação registrada.
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[380px] space-y-3 pr-2 scrollbar-thin">
               {[...extrato].reverse().map((evento, idx) => {
+                const isDebito = ["SAQUE", "TRANSFERENCIA_DEBITO", "TRANSFERENCIA_FALHOU"].includes(evento.tipo);
                 const isFalha = evento.tipo === "TRANSFERENCIA_FALHOU";
                 
                 return (
-                  <div key={idx} className="border border-gray-800 rounded p-3 text-xs shadow-sm bg-gray-900/80 hover:border-gray-700 hover:bg-gray-900/80 transition">
+                  <div key={idx} className={`rounded border p-3 text-xs shadow-sm transition-colors ${
+                    isDark
+                      ? 'border-gray-800 bg-gray-900 text-slate-100'
+                      : 'border-slate-200 bg-white text-slate-800'
+                  }`}>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-semibold text-slate-200 uppercase tracking-wider text-[9px]">
+                      <span className={`font-semibold uppercase tracking-wider text-[9px] ${
+                        isDark ? 'text-slate-300' : 'text-slate-700'
+                      }`}>
                         {evento.tipo.replace('_', ' ')}
                       </span>
-                      <span className="bg-gray-800 text-amber-300 border border-gray-700 font-bold px-1.5 py-0.5 rounded text-[9px] flex items-center gap-0.5">
+                      <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] flex items-center gap-0.5 ${
+                        isDark ? 'bg-amber-900/50 text-amber-500' : 'bg-amber-400/50 text-amber-600'
+                      }`}>
                         Lamport: {evento.timestampLamport}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center text-[10px] text-slate-300">
+                    <div className={`flex justify-between items-center text-[10px] ${
+                      isDark ? 'text-slate-300' : 'text-slate-600'
+                    }`}>
                       <span>
                         {evento.tipo === "CRIAR_CONTA" && `Criado: R$ ${evento.detalhes.saldoInicial.toFixed(2)}`}
                         {evento.tipo === "DEPOSITO" && `Valor: +R$ ${evento.detalhes.valor.toFixed(2)}`}
@@ -247,12 +291,14 @@ export default function StudentPanel({
                         {evento.tipo === "TRANSFERENCIA_CREDITO_REMOTO" && `De Agência ${evento.detalhes.origemAgencia}: +R$ ${evento.detalhes.valor.toFixed(2)}`}
                         {evento.tipo === "TRANSFERENCIA_FALHOU" && `Destino #${evento.detalhes.idDestino}: R$ ${evento.detalhes.valor.toFixed(2)}`}
                       </span>
-                      <span className="text-[8px] text-slate-400">
+                      <span className={`text-[8px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                         {new Date(evento.dataHora).toLocaleString('pt-BR')}
                       </span>
                     </div>
                     {isFalha && (
-                      <p className="text-[9px] text-red-300 bg-red-950/60 border border-red-900/80 p-1.5 rounded mt-1.5 break-words">
+                      <p className={`text-[9px] p-1 rounded mt-1.5 break-words ${
+                        isDark ? 'text-red-300 bg-red-950/40' : 'text-red-600 bg-red-50'
+                      }`}>
                         Erro: {evento.detalhes.erro.substring(0, 100)}...
                       </p>
                     )}
