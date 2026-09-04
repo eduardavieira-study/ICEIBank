@@ -10,15 +10,15 @@ export default function Header({
   handleLogout
 }) {
   return (
-    <header className="bg-puc-dark text-white border-b-4 border-amber-500 shadow-md">
+    <header className="bg-gray-950 text-white border-b border-gray-900 shadow-xl">
       <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="bg-amber-500 text-puc-dark p-2 rounded font-bold text-xl tracking-wider shadow">
+          <div className="bg-blue-950/80 border border-blue-800/30 text-white px-2.5 py-1.5 rounded-sm font-bold text-lg tracking-wider shadow">
             ICEI
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-wide">ICEIBank</h1>
-            <p className="text-xs text-slate-300">Sistema Distribuído de Agências • PUC Minas</p>
+            <h1 className="text-xl font-bold tracking-wide text-white">ICEIBank</h1>
+            <p className="text-xs text-slate-400">Sistema Distribuído de Agências • PUC Minas</p>
           </div>
         </div>
 
@@ -33,7 +33,7 @@ export default function Header({
           {token && (
             <button 
               onClick={() => handleLogout(true)}
-              className="flex items-center gap-2 bg-red-800 hover:bg-red-700 text-white font-semibold text-xs py-2 px-3 rounded shadow transition"
+              className="flex items-center gap-2 bg-red-950/80 hover:bg-red-900 border border-red-900 text-red-50 font-semibold text-xs py-2 px-3 rounded-lg shadow transition"
             >
               <LogOut size={14} />
               Sair

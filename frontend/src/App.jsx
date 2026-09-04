@@ -172,8 +172,13 @@ export default function App() {
           expirar_em_segundos: parseInt(expirarEmSegundos, 10)
         };
       } else {
+        const idNum = parseInt(loginIdConta, 10);
+        if (isNaN(idNum) || idNum < 0) {
+          addToast('O número da conta deve ser um valor válido e não negativo.', 'error');
+          return;
+        }
         bodyData = {
-          idConta: parseInt(loginIdConta, 10),
+          idConta: idNum,
           nomeAluno: loginNomeAluno,
           expirar_em_segundos: parseInt(expirarEmSegundos, 10)
         };
@@ -236,16 +241,17 @@ export default function App() {
   // Depósito
   const handleDeposito = async (e) => {
     e.preventDefault();
-    if (!valorDeposito || parseFloat(valorDeposito) <= 0) {
-      addToast('Informe um valor válido maior que zero.', 'error');
+    const valor = parseFloat(valorDeposito);
+    if (isNaN(valor) || valor <= 0) {
+      addToast('Informe um valor de depósito maior que zero.', 'error');
       return;
     }
     try {
       await fetchWithAuth(`/contas/${idConta}/depositar`, {
         method: 'POST',
-        body: JSON.stringify({ valor: parseFloat(valorDeposito) })
+        body: JSON.stringify({ valor: valor })
       });
-      addToast(`Depósito de R$ ${parseFloat(valorDeposito).toFixed(2)} realizado!`, 'success');
+      addToast(`Depósito de R$ ${valor.toFixed(2)} realizado!`, 'success');
       setValorDeposito('');
       carregarDadosConta();
     } catch (err) {}
@@ -254,16 +260,17 @@ export default function App() {
   // Saque
   const handleSaque = async (e) => {
     e.preventDefault();
-    if (!valorSaque || parseFloat(valorSaque) <= 0) {
-      addToast('Informe um valor válido maior que zero.', 'error');
+    const valor = parseFloat(valorSaque);
+    if (isNaN(valor) || valor <= 0) {
+      addToast('Informe um valor de saque maior que zero.', 'error');
       return;
     }
     try {
       await fetchWithAuth(`/contas/${idConta}/sacar`, {
         method: 'POST',
-        body: JSON.stringify({ valor: parseFloat(valorSaque) })
+        body: JSON.stringify({ valor: valor })
       });
-      addToast(`Saque de R$ ${parseFloat(valorSaque).toFixed(2)} realizado!`, 'success');
+      addToast(`Saque de R$ ${valor.toFixed(2)} realizado!`, 'success');
       setValorSaque('');
       carregarDadosConta();
     } catch (err) {}
@@ -275,8 +282,8 @@ export default function App() {
     const destId = parseInt(transferDestId, 10);
     const valor = parseFloat(transferValor);
 
-    if (isNaN(destId)) {
-      addToast('Informe um ID de destino válido.', 'error');
+    if (isNaN(destId) || destId < 0) {
+      addToast('Informe um ID de destino válido e não negativo.', 'error');
       return;
     }
     if (isNaN(valor) || valor <= 0) {
@@ -306,8 +313,12 @@ export default function App() {
     const accountId = parseInt(newAccountId, 10);
     const saldoInit = parseFloat(newAccountBalance || '0');
 
-    if (isNaN(accountId)) {
-      addToast('Informe um ID numérico para a conta.', 'error');
+    if (isNaN(accountId) || accountId < 0) {
+      addToast('Informe um ID numérico não negativo para a conta.', 'error');
+      return;
+    }
+    if (isNaN(saldoInit) || saldoInit < 0) {
+      addToast('O saldo inicial não pode ser negativo.', 'error');
       return;
     }
     if (!newAccountName.trim()) {
@@ -332,7 +343,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-black flex flex-col justify-between">
       
       {/* HEADER COMPONENTE */}
       <Header 
