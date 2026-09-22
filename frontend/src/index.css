@@ -3,14 +3,42 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply font-sans bg-black text-slate-100;
-  }
-  h1, h2, h3, h4, button, select, input {
-    @apply font-nunito;
+  :root {
+    --bg: 248 246 253;
+    --bg-alt: 240 235 251;
+    --surface: 255 255 255;
+    --surface-alt: 246 243 252;
+    --border: 226 218 245;
+    --text: 30 21 51;
+    --text-muted: 106 96 130;
+    --header-bg: 255 255 255;
   }
 
-  /* Remove spin buttons (setas para cima e para baixo) de campos numéricos */
+  .dark {
+    --bg: 13 10 22;
+    --bg-alt: 18 14 29;
+    --surface: 21 16 31;
+    --surface-alt: 29 23 41;
+    --border: 44 36 63;
+    --text: 240 236 250;
+    --text-muted: 163 152 189;
+    --header-bg: 18 14 29;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased transition-colors duration-200;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+  }
+
+  h1, h2, h3, h4, h5 {
+    @apply font-display;
+  }
+
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -19,5 +47,93 @@
 
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  ::selection {
+    @apply bg-primary-500/30 text-inherit;
+  }
+}
+
+@layer components {
+  .surface {
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--border));
+  }
+
+  .surface-alt {
+    background-color: rgb(var(--surface-alt));
+    border-color: rgb(var(--border));
+  }
+
+  .text-muted {
+    color: rgb(var(--text-muted));
+  }
+
+  .card {
+    @apply surface rounded-lg border transition-colors duration-200;
+  }
+
+  .input-base {
+    @apply w-full text-sm rounded-md border px-3.5 py-2.5 outline-none transition
+      focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500;
+    background-color: rgb(var(--surface-alt));
+    border-color: rgb(var(--border));
+    color: rgb(var(--text));
+  }
+
+  .input-base::placeholder {
+    color: rgb(var(--text-muted) / 0.75);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md font-semibold text-sm px-4 py-2.5
+      transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+
+  .btn-primary {
+    @apply btn text-white bg-primary-600 hover:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply btn border;
+    background-color: rgb(var(--surface-alt));
+    border-color: rgb(var(--border));
+    color: rgb(var(--text));
+  }
+
+  .btn-ghost {
+    @apply btn text-muted hover:text-inherit;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--border));
+    border-radius: 999px;
+  }
+
+  .gradient-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  .icon-tile {
+    @apply w-9 h-9 rounded-md flex items-center justify-center shrink-0;
+  }
+
+  .noise-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch' result='noise'/%3E%3CfeColorMatrix in='noise' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 14 -6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }

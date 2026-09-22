@@ -77,6 +77,48 @@ ICEIBank/
 
 ---
 
+## 🖼️ Imagens da aplicação
+
+### Landing Page (tema claro e escuro)
+
+<p align="center">
+  <img src="images/home-l.png" width="49%" alt="Landing page do ICEIBank no tema claro">
+  <img src="images/home-d.png" width="49%" alt="Landing page do ICEIBank no tema escuro">
+</p>
+
+### Portal de Acesso
+
+<p align="center">
+  <img src="images/login.png" width="80%" alt="Tela de login com seleção de agência e área do aluno ou administração">
+</p>
+
+### Painel do Aluno
+
+<p align="center">
+  <img src="images/painel.png" width="49%" alt="Visão geral do painel do aluno com saldo e últimas movimentações">
+  <img src="images/movimentacoes.png" width="49%" alt="Tela de movimentações com depósito, saque e transferência">
+</p>
+
+### Histórico com Relógio Lógico de Lamport
+
+<p align="center">
+  <img src="images/historico.png" width="80%" alt="Histórico de eventos ordenado por relógios lógicos de Lamport">
+</p>
+
+### Painel Administrativo
+
+<p align="center">
+  <img src="images/adm-painel.png" width="80%" alt="Painel administrativo para cadastro de novas contas de aluno">
+</p>
+
+### Design System
+
+<p align="center">
+  <img src="images/design-system.png" width="80%" alt="Página de Design System com cores, tipografia, botões e componentes do ICEIBank">
+</p>
+
+---
+
 ## 🤖 Uso de Inteligência Artificial
 
 Este projeto foi desenvolvido em modelo de *pair programming* (programação em par) em colaboração com o **Antigravity**, uma inteligência artificial do time Google DeepMind. A IA colaborou ativamente na tradução dos conceitos de controle e rotas do Express para FastAPI, na modularização estrutural e responsividade do frontend em React e na escrita da documentação do repositório.

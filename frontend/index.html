@@ -4,14 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0D0A16" />
+    <meta name="description" content="ICEIBank — sistema bancário distribuído acadêmico do ICEI, PUC Minas." />
     <title>ICEIBank - PUC Minas</title>
-    
-    <!-- Google Fonts: Nunito & Poppins -->
+
+    <!-- Google Fonts: Sora, Inter & Poppins (destaque da hero) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+      // Aplica o tema salvo antes da renderização para evitar "flash" de tema errado
+      (function () {
+        var theme = localStorage.getItem('ICEIBANK_THEME') || 'dark';
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
   </head>
-  <body class="bg-black text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
+  <body class="antialiased selection:bg-primary-500/30">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

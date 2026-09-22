@@ -1,30 +1,26 @@
 import React from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, ChevronDown } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
-export default function AgencySelector({ portaAgencia, setPortaAgencia, agencias, isDark = true }) {
+export default function AgencySelector({ compact = false }) {
+  const { portaAgencia, setPortaAgencia, AGENCIAS } = useApp();
+
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm transition ${
-      isDark 
-        ? 'bg-puc-blue/30 border-gray-800' 
-        : 'bg-puc-blue/80 border-slate-700'
-    }`}>
-      <Building2 size={16} className="text-amber-400 shrink-0" />
-      <span className={`text-xs ${isDark ? 'font-medium text-slate-50' : 'font-semibold text-slate-200'}`}>
-        Porta de Entrada:
-      </span>
-      <select 
+    <div className="relative inline-flex items-center gap-2 rounded-md border surface-alt px-3 py-2 text-xs">
+      <Building2 size={15} className="text-secondary-500 shrink-0" />
+      {!compact && <span className="font-medium text-muted hidden lg:inline">Agência:</span>}
+      <select
         value={portaAgencia}
         onChange={(e) => setPortaAgencia(parseInt(e.target.value, 10))}
-        className={`text-white text-xs py-0.5 px-1.5 rounded focus:outline-none cursor-pointer ${
-          isDark 
-            ? 'bg-puc-blue/60 border border-gray-700' 
-            : 'bg-puc-dark border border-slate-600'
-        }`}
+        className="appearance-none bg-transparent pr-5 font-semibold outline-none cursor-pointer max-w-[9.5rem] sm:max-w-none truncate"
       >
-        {agencias.map(ag => (
-          <option key={ag.id} value={ag.porta}>{ag.nome}</option>
+        {AGENCIAS.map((ag) => (
+          <option key={ag.id} value={ag.porta} className="text-slate-900">
+            {compact ? ag.nome.split(' ')[1] : ag.nome}
+          </option>
         ))}
       </select>
+      <ChevronDown size={13} className="absolute right-2.5 pointer-events-none text-muted" />
     </div>
   );
 }
