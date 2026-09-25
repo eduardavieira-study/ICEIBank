@@ -94,3 +94,18 @@
      * **Controller (Controlador):** Representado pelas funções manipuladoras de formulários e lógica de negócio (`handleLogin`, `handleDeposito`, `handleSaque`, `handleTransferencia` e a função de comunicação `fetchWithAuth`) que alteram os dados do modelo (Model) em resposta às interações do usuário.
      Embora os papéis estejam claramente definidos, eles se encontram integrados e declarados dentro da estrutura reativa de componentes típica do React.
 
+---
+
+# Respostas - Sprint 2: ICEIBank
+
+### 6.4 Perguntas - Parte B (Relógio Vetorial)
+
+1. **Com 3 agências, o vetor tem 3 posições. Se o sistema crescesse para 10 agências, o que aconteceria com o tamanho de cada vetor anexado a cada mensagem? Isso é um problema? Por quê (ou por que não)?**
+   * *Resposta:* Com 10 agências, cada vetor passaria a ter 10 posições, já que o relógio vetorial reserva uma posição para cada processo do sistema, de modo que o tamanho do vetor cresce linearmente, O(n), com o número de agências. Isso é um problema em escala: cada mensagem trocada entre agências carrega o vetor inteiro, então o overhead de rede e de armazenamento por evento cresce proporcionalmente ao número de processos, ainda que o valor absoluto (alguns inteiros) seja pequeno para dezenas ou centenas de agências. Em sistemas distribuídos muito grandes (milhares de nós), esse crescimento linear por mensagem se torna impraticável, e é exatamente por isso que existem variações como relógios vetoriais esparsos ou *interval tree clocks*, que tentam representar a mesma informação causal com menos overhead. Para as 3 (ou mesmo 10) agências deste projeto, porém, o custo extra é desprezível.
+
+2. **Dado `V1 = [3, 1, 0]` e `V2 = [3, 2, 0]`: qual evento aconteceu primeiro, ou eles são concorrentes? Justifique comparando posição a posição.**
+   * *Resposta:* Comparando posição a posição: `V1[0]=3 <= V2[0]=3`, `V1[1]=1 <= V2[1]=2` e `V1[2]=0 <= V2[2]=0`. Como **todas** as posições de `V1` são menores ou iguais às de `V2`, e existe ao menos uma posição estritamente menor (a posição 1), temos `V1 < V2`. Portanto o evento de `V1` aconteceu **antes** do evento de `V2`, havendo uma relação causal entre eles (o evento de `V2` só pôde ocorrer depois de, direta ou indiretamente, "saber" sobre o evento de `V1`).
+
+3. **Dado `V1 = [3, 1, 0]` e `V2 = [1, 3, 0]`: qual evento aconteceu primeiro, ou eles são concorrentes? Justifique.**
+   * *Resposta:* Comparando posição a posição: na posição 0, `V1[0]=3 > V2[0]=1` (V1 é maior); na posição 1, `V1[1]=1 < V2[1]=3` (V2 é maior). Como nenhum dos dois vetores domina o outro em todas as posições, sendo `V1` maior em uma posição e menor em outra, não é possível afirmar que `V1 <= V2` nem que `V2 <= V1`. Logo, os dois eventos são **concorrentes**: nenhum influenciou o outro, eles aconteceram de forma independente em processos diferentes.
+

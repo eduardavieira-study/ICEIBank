@@ -12,16 +12,16 @@ class RegistroEventos {
     fs.mkdirSync(path.dirname(this.caminhoArquivo), { recursive: true });
   }
 
-  registrar(tipo, timestampLamport, detalhes) {
+  registrar(tipo, timestampVetorial, detalhes) {
     const evento = {
       agencia: this.nomeAgencia,
       tipo,
-      timestampLamport,
+      timestampVetorial,
       horaParede: new Date().toISOString(),
       detalhes,
     };
     fs.appendFileSync(this.caminhoArquivo, JSON.stringify(evento) + '\n');
-    console.log(`[Lamport ${timestampLamport}] ${tipo}`, detalhes);
+    console.log(`[Vetor ${JSON.stringify(timestampVetorial)}] ${tipo}`, detalhes);
     return evento;
   }
 }

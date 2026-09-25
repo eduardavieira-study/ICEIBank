@@ -19,17 +19,17 @@ class RegistroEventos:
             pasta_dados, f"eventos-{nome_agencia}.jsonl"
         )
 
-    def registrar(self, tipo: str, timestamp_lamport: int, detalhes: dict) -> dict:
+    def registrar(self, tipo: str, timestamp_vetorial: list, detalhes: dict) -> dict:
         data_hora = get_data_hora()
         evento = {
             "agencia": self.nome_agencia,
             "tipo": tipo,
-            "timestampLamport": timestamp_lamport,
+            "timestampVetorial": timestamp_vetorial,
             "horaParede": data_hora,
             "dataHora": data_hora,
             "detalhes": detalhes,
         }
         with open(self.caminho_arquivo, "a", encoding="utf-8") as arquivo:
             arquivo.write(json.dumps(evento, ensure_ascii=False) + "\n")
-        print(f"[Lamport {timestamp_lamport}] {tipo} {detalhes} | {data_hora}")
+        print(f"[Vetor {timestamp_vetorial}] {tipo} {detalhes} | {data_hora}")
         return evento
