@@ -26,8 +26,15 @@ class TransacaoRequest(BaseModel):
 class LoginRequest(BaseModel):
     usuario: str = None
     senha: str = None
-    idConta: int = None
+    nomeAluno: str = None
     expirar_em_segundos: int = 1800
+
+
+def buscar_conta_por_nome(contas: dict, nome_aluno: str):
+    nome = nome_aluno.strip().lower()
+    return next(
+        (c for c in contas.values() if c["nomeAluno"].strip().lower() == nome), None
+    )
 
 
 def login(request: Request, body: LoginRequest):
@@ -41,28 +48,16 @@ def login(request: Request, body: LoginRequest):
         return {"token": token, "role": "admin", "usuario": "admin"}
 
     # Login de Aluno
-    if body.idConta is not None and body.senha:
-        id_conta = body.idConta
-
-        # Verifica se esta agência é responsável pela conta
-        if config.agencia_responsavel(id_conta) != id_agencia:
-            agencia_correta = config.agencia_responsavel(id_conta)
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Esta conta pertence à Agência {agencia_correta}. Por favor, faça login na porta correspondente.",
-            )
-
-        conta = contas.get(id_conta)
-        senha_armazenada = request.app.state.senhas.get(id_conta)
-        if (
-            not conta
-            or not senha_armazenada
-            or not verificar_senha(body.senha, senha_armazenada)
-        ):
+    if body.nomeAluno and body.senha:
+        conta = buscar_conta_por_nome(contas, body.nomeAluno)
+        senha_armazenada = request.app.state.senhas.get(conta["id"]) if conta else None
+        if not senha_armazenada or not verificar_senha(body.senha, senha_armazenada):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Credenciais inválidas para a conta informada nesta agência.",
+                detail=f"Nome ou senha inválidos na Agência {id_agencia}. Verifique se selecionou a agência correta.",
             )
+
+        id_conta = conta["id"]
 
         token = gerar_token(id_conta, role="user", expires_in_seconds=exp_seconds)
         return {
@@ -112,6 +107,13 @@ def criar_conta(
     if id_conta in contas:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Conta já existe."
+        )
+
+    # O nome é usado no login, então precisa ser único dentro da agência
+    if buscar_conta_por_nome(contas, nome_aluno):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Já existe uma conta com o nome '{nome_aluno}' nesta agência.",
         )
 
     ts = relogio.evento_local()

@@ -11,8 +11,8 @@ export default function LoginForm({ onSuccess }) {
     setLoginUser,
     loginPass,
     setLoginPass,
-    loginIdConta,
-    setLoginIdConta,
+    loginNomeAluno,
+    setLoginNomeAluno,
     loginSenhaAluno,
     setLoginSenhaAluno,
     expirarEmSegundos,
@@ -24,12 +24,8 @@ export default function LoginForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdminMode) {
-      if (loginIdConta === '' || !loginSenhaAluno) {
-        addToast('Preencha o número da conta e a senha.', 'error');
-        return;
-      }
-      if (parseInt(loginIdConta, 10) < 0) {
-        addToast('O número da conta não pode ser negativo.', 'error');
+      if (!loginNomeAluno.trim() || !loginSenhaAluno) {
+        addToast('Preencha o nome do aluno e a senha.', 'error');
         return;
       }
     } else {
@@ -40,19 +36,6 @@ export default function LoginForm({ onSuccess }) {
     }
     const success = await handleLogin(e);
     if (success && onSuccess) onSuccess();
-  };
-
-  const handleIdContaChange = (e) => {
-    const val = e.target.value;
-    if (val === '' || (!val.includes('-') && Number(val) >= 0)) {
-      setLoginIdConta(val);
-    }
-  };
-
-  const blockNegativeAndDecimals = (e) => {
-    if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') {
-      e.preventDefault();
-    }
   };
 
   return (
@@ -106,19 +89,17 @@ export default function LoginForm({ onSuccess }) {
         ) : (
           <>
             <div>
-              <label className="block text-xs font-bold mb-1.5">Número da Conta</label>
+              <label className="block text-xs font-bold mb-1.5">Nome do Aluno</label>
               <input
-                type="number"
-                min="0"
-                onWheel={(e) => e.currentTarget.blur()}
-                onKeyDown={blockNegativeAndDecimals}
-                value={loginIdConta}
-                onChange={handleIdContaChange}
-                placeholder="Ex: 0"
+                type="text"
+                value={loginNomeAluno}
+                onChange={(e) => setLoginNomeAluno(e.target.value)}
+                placeholder="Ex: Ana"
+                autoComplete="username"
                 className="input-base rounded-full"
               />
               <p className="text-[10px] mt-1 text-muted">
-                Escolha a agência correta no topo da página: id_conta % 3 deve ser igual ao ID da agência.
+                Escolha no topo da página a agência onde sua conta foi cadastrada.
               </p>
             </div>
             <div>

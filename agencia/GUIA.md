@@ -60,7 +60,7 @@ $headers = @{ Authorization = "Bearer $adminToken" }
 Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "senha": "ana123", "saldoInicial": 100.0}' -Headers $headers
 
 # B. Login como a Ana e consulta de saldo usando seu próprio token
-$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "senha": "ana123"}'
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"nomeAluno": "Ana", "senha": "ana123"}'
 $userToken = $loginResUser.token
 $headersUser = @{ Authorization = "Bearer $userToken" }
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get -Headers $headersUser
@@ -103,7 +103,7 @@ Invoke-RestMethod -Uri "http://localhost:4074/contas/0/sacar" -Method Post -Cont
 Obter o Token da Ana (Dona da Conta)
 ```
 # 1. Faz login como a Ana
-$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "senha": "ana123"}'
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"nomeAluno": "Ana", "senha": "ana123"}'
 $userToken = $loginResUser.token
 $headersUser = @{ Authorization = "Bearer $userToken" }
 ```

@@ -52,7 +52,7 @@ export function AppProvider({ children }) {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
-  const [loginIdConta, setLoginIdConta] = useState('');
+  const [loginNomeAluno, setLoginNomeAluno] = useState('');
   const [loginSenhaAluno, setLoginSenhaAluno] = useState('');
   const [expirarEmSegundos, setExpirarEmSegundos] = useState(1800);
 
@@ -181,13 +181,8 @@ export function AppProvider({ children }) {
           expirar_em_segundos: parseInt(expirarEmSegundos, 10)
         };
       } else {
-        const idNum = parseInt(loginIdConta, 10);
-        if (isNaN(idNum) || idNum < 0) {
-          addToast('O número da conta deve ser um valor válido e não negativo.', 'error');
-          return;
-        }
         bodyData = {
-          idConta: idNum,
+          nomeAluno: loginNomeAluno.trim(),
           senha: loginSenhaAluno,
           expirar_em_segundos: parseInt(expirarEmSegundos, 10)
         };
@@ -217,7 +212,7 @@ export function AppProvider({ children }) {
 
       setLoginUser('');
       setLoginPass('');
-      setLoginIdConta('');
+      setLoginNomeAluno('');
       setLoginSenhaAluno('');
       setExpirarEmSegundos(1800);
       return true;
@@ -366,7 +361,7 @@ export function AppProvider({ children }) {
     isAdminMode, setIsAdminMode,
     loginUser, setLoginUser,
     loginPass, setLoginPass,
-    loginIdConta, setLoginIdConta,
+    loginNomeAluno, setLoginNomeAluno,
     loginSenhaAluno, setLoginSenhaAluno,
     expirarEmSegundos, setExpirarEmSegundos,
     handleLogin,
