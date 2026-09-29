@@ -53,7 +53,7 @@ export function AppProvider({ children }) {
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [loginIdConta, setLoginIdConta] = useState('');
-  const [loginNomeAluno, setLoginNomeAluno] = useState('');
+  const [loginSenhaAluno, setLoginSenhaAluno] = useState('');
   const [expirarEmSegundos, setExpirarEmSegundos] = useState(1800);
 
   // Operações Aluno
@@ -65,6 +65,7 @@ export function AppProvider({ children }) {
   // Operações Admin
   const [newAccountId, setNewAccountId] = useState('');
   const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountPassword, setNewAccountPassword] = useState('');
   const [newAccountBalance, setNewAccountBalance] = useState('');
 
   // Sistema de Toasts
@@ -187,7 +188,7 @@ export function AppProvider({ children }) {
         }
         bodyData = {
           idConta: idNum,
-          nomeAluno: loginNomeAluno,
+          senha: loginSenhaAluno,
           expirar_em_segundos: parseInt(expirarEmSegundos, 10)
         };
       }
@@ -217,7 +218,7 @@ export function AppProvider({ children }) {
       setLoginUser('');
       setLoginPass('');
       setLoginIdConta('');
-      setLoginNomeAluno('');
+      setLoginSenhaAluno('');
       setExpirarEmSegundos(1800);
       return true;
     } catch (err) {
@@ -329,6 +330,10 @@ export function AppProvider({ children }) {
       addToast('Informe o nome do titular.', 'error');
       return;
     }
+    if (!newAccountPassword.trim()) {
+      addToast('Informe a senha da conta.', 'error');
+      return;
+    }
 
     try {
       await fetchWithAuth('/contas', {
@@ -336,12 +341,14 @@ export function AppProvider({ children }) {
         body: JSON.stringify({
           id: accountId,
           nomeAluno: newAccountName,
+          senha: newAccountPassword,
           saldoInicial: saldoInit
         })
       });
       addToast(`Conta ${accountId} (titular ${newAccountName}) criada com sucesso!`, 'success');
       setNewAccountId('');
       setNewAccountName('');
+      setNewAccountPassword('');
       setNewAccountBalance('');
     } catch (err) {}
   };
@@ -360,7 +367,7 @@ export function AppProvider({ children }) {
     loginUser, setLoginUser,
     loginPass, setLoginPass,
     loginIdConta, setLoginIdConta,
-    loginNomeAluno, setLoginNomeAluno,
+    loginSenhaAluno, setLoginSenhaAluno,
     expirarEmSegundos, setExpirarEmSegundos,
     handleLogin,
     // aluno
@@ -372,6 +379,7 @@ export function AppProvider({ children }) {
     // admin
     newAccountId, setNewAccountId,
     newAccountName, setNewAccountName,
+    newAccountPassword, setNewAccountPassword,
     newAccountBalance, setNewAccountBalance,
     handleCriarConta,
     // toasts

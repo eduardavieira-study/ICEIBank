@@ -33,6 +33,8 @@ app.state.id_agencia = id_agencia
 app.state.relogio = RelogioLamport()
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
 app.state.contas = {}
+# Hashes das senhas ficam separados das contas para nunca serem retornados nas respostas
+app.state.senhas = {}
 
 app.include_router(router)
 

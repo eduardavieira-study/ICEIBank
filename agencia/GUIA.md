@@ -28,7 +28,7 @@ python3 -m agencia.src.main
 Em um quarto terminal, teste com Invoke-RestMethod:
 ```
 # Criar a conta 0 na Agência 0 (0 % 3 == 0)
-Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id":0,"nomeAluno":"Ana","saldoInicial":100}'
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id":0,"nomeAluno":"Ana","senha":"ana123","saldoInicial":100}'
 
 # Consultar saldo
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get
@@ -37,9 +37,9 @@ Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0/depositar" -Method Post -ContentType "application/json" -Body '{"valor":25}'
 ```
 
-Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":1,"nomeAluno":"Helena","saldoInicial":300}'
+Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":1,"nomeAluno":"Helena","senha":"helena123","saldoInicial":300}'
 
-Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":4,"nomeAluno":"Lucas","saldoInicial":150}'
+Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Body '{"id":4,"nomeAluno":"Lucas","senha":"lucas123","saldoInicial":150}'
 
 Invoke-RestMethod -Uri "http://localhost:4074/transferencias" -Method Post -ContentType "application/json" -Body '{"idOrigem":0,"idDestino":1,"valor":10}'
 
@@ -57,10 +57,10 @@ Token Válido
 $loginRes = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"usuario": "admin", "senha": "admin"}'
 $adminToken = $loginRes.token
 $headers = @{ Authorization = "Bearer $adminToken" }
-Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "saldoInicial": 100.0}' -Headers $headers
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "senha": "ana123", "saldoInicial": 100.0}' -Headers $headers
 
 # B. Login como a Ana e consulta de saldo usando seu próprio token
-$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "nomeAluno": "Ana"}'
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "senha": "ana123"}'
 $userToken = $loginResUser.token
 $headersUser = @{ Authorization = "Bearer $userToken" }
 Invoke-RestMethod -Uri "http://localhost:4074/contas/0" -Method Get -Headers $headersUser
@@ -89,7 +89,7 @@ $adminToken = $loginRes.token
 $headersAdmin = @{ Authorization = "Bearer $adminToken" }
 
 # 2. Cria a conta 0 (Ana) com saldo inicial de 100.0
-Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "saldoInicial": 100.0}' -Headers $headersAdmin
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Body '{"id": 0, "nomeAluno": "Ana", "senha": "ana123", "saldoInicial": 100.0}' -Headers $headersAdmin
 ```
 Realizar Movimentações na Conta (Gerar Eventos)
 ```
@@ -103,7 +103,7 @@ Invoke-RestMethod -Uri "http://localhost:4074/contas/0/sacar" -Method Post -Cont
 Obter o Token da Ana (Dona da Conta)
 ```
 # 1. Faz login como a Ana
-$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "nomeAluno": "Ana"}'
+$loginResUser = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body '{"idConta": 0, "senha": "ana123"}'
 $userToken = $loginResUser.token
 $headersUser = @{ Authorization = "Bearer $userToken" }
 ```

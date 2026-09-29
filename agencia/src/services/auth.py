@@ -2,6 +2,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from datetime import datetime, timedelta
+import hashlib
+import hmac
+import os
 
 # Configurações do JWT
 SECRET_KEY = "sua_chave_secreta_super_secreta"
@@ -42,3 +45,15 @@ def verificar_autorizacao(payload: dict, id_conta: int) -> bool:
     if payload.get("role") == "admin":
         return True
     return payload.get("sub") == str(id_conta)
+
+
+def gerar_hash_senha(senha: str) -> str:
+    salt = os.urandom(16)
+    hash_senha = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), salt, 100_000)
+    return f"{salt.hex()}${hash_senha.hex()}"
+
+
+def verificar_senha(senha: str, senha_armazenada: str) -> bool:
+    salt_hex, hash_hex = senha_armazenada.split("$")
+    hash_senha = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), bytes.fromhex(salt_hex), 100_000)
+    return hmac.compare_digest(hash_senha.hex(), hash_hex)

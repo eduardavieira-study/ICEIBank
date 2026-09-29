@@ -3,12 +3,19 @@ from pydantic import BaseModel
 import agencia.src.config as config
 import os
 import json
-from agencia.src.services.auth import gerar_token, validar_token, verificar_autorizacao
+from agencia.src.services.auth import (
+    gerar_token,
+    validar_token,
+    verificar_autorizacao,
+    gerar_hash_senha,
+    verificar_senha,
+)
 
 
 class CriarContaRequest(BaseModel):
     id: int
     nomeAluno: str
+    senha: str
     saldoInicial: float = 0.0
 
 
@@ -20,7 +27,6 @@ class LoginRequest(BaseModel):
     usuario: str = None
     senha: str = None
     idConta: int = None
-    nomeAluno: str = None
     expirar_em_segundos: int = 1800
 
 
@@ -35,9 +41,8 @@ def login(request: Request, body: LoginRequest):
         return {"token": token, "role": "admin", "usuario": "admin"}
 
     # Login de Aluno
-    if body.idConta is not None and body.nomeAluno is not None:
+    if body.idConta is not None and body.senha:
         id_conta = body.idConta
-        nome_aluno = body.nomeAluno
 
         # Verifica se esta agência é responsável pela conta
         if config.agencia_responsavel(id_conta) != id_agencia:
@@ -48,9 +53,11 @@ def login(request: Request, body: LoginRequest):
             )
 
         conta = contas.get(id_conta)
+        senha_armazenada = request.app.state.senhas.get(id_conta)
         if (
             not conta
-            or conta["nomeAluno"].strip().lower() != nome_aluno.strip().lower()
+            or not senha_armazenada
+            or not verificar_senha(body.senha, senha_armazenada)
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,6 +92,12 @@ def criar_conta(
     nome_aluno = body.nomeAluno
     saldo_inicial = body.saldoInicial
 
+    if not body.senha.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha da conta não pode ser vazia.",
+        )
+
     id_agencia = request.app.state.id_agencia
     contas = request.app.state.contas
     relogio = request.app.state.relogio
@@ -104,6 +117,7 @@ def criar_conta(
     ts = relogio.evento_local()
     conta = {"id": id_conta, "nomeAluno": nome_aluno, "saldo": saldo_inicial}
     contas[id_conta] = conta
+    request.app.state.senhas[id_conta] = gerar_hash_senha(body.senha)
 
     registro.registrar(
         "CRIAR_CONTA",

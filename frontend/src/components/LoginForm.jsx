@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Shield, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import PasswordInput from './PasswordInput';
 
 export default function LoginForm({ onSuccess }) {
   const {
@@ -12,8 +13,8 @@ export default function LoginForm({ onSuccess }) {
     setLoginPass,
     loginIdConta,
     setLoginIdConta,
-    loginNomeAluno,
-    setLoginNomeAluno,
+    loginSenhaAluno,
+    setLoginSenhaAluno,
     expirarEmSegundos,
     setExpirarEmSegundos,
     handleLogin,
@@ -23,8 +24,8 @@ export default function LoginForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdminMode) {
-      if (loginIdConta === '' || !loginNomeAluno.trim()) {
-        addToast('Preencha o ID da conta e o Nome do titular.', 'error');
+      if (loginIdConta === '' || !loginSenhaAluno) {
+        addToast('Preencha o número da conta e a senha.', 'error');
         return;
       }
       if (parseInt(loginIdConta, 10) < 0) {
@@ -94,8 +95,7 @@ export default function LoginForm({ onSuccess }) {
             </div>
             <div>
               <label className="block text-xs font-bold mb-1.5">Senha Administrativa</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={loginPass}
                 onChange={(e) => setLoginPass(e.target.value)}
                 placeholder="••••••••"
@@ -122,12 +122,11 @@ export default function LoginForm({ onSuccess }) {
               </p>
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1.5">Nome Completo do Aluno</label>
-              <input
-                type="text"
-                value={loginNomeAluno}
-                onChange={(e) => setLoginNomeAluno(e.target.value)}
-                placeholder="Ex: Ana"
+              <label className="block text-xs font-bold mb-1.5">Senha</label>
+              <PasswordInput
+                value={loginSenhaAluno}
+                onChange={(e) => setLoginSenhaAluno(e.target.value)}
+                placeholder="••••••••"
                 className="input-base rounded-full"
               />
             </div>

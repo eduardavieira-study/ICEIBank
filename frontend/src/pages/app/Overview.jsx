@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Banknote, Clock, Shield, ShieldPlus, ArrowRight, Wallet } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import PasswordInput from '../../components/PasswordInput';
 
 const blockNegativeAndDecimals = (e) => {
   if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') {
@@ -102,6 +103,8 @@ function AdminOverview() {
     setNewAccountId,
     newAccountName,
     setNewAccountName,
+    newAccountPassword,
+    setNewAccountPassword,
     newAccountBalance,
     setNewAccountBalance,
     handleCriarConta,
@@ -132,7 +135,7 @@ function AdminOverview() {
           O ID da conta deve seguir a regra de partição da agência ativa: id % 3 deve ser igual ao ID desta agência.
         </p>
 
-        <form onSubmit={handleCriarConta} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form onSubmit={handleCriarConta} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-[11px] font-bold mb-1.5 text-muted">ID da Conta (Número)</label>
             <input
@@ -164,6 +167,17 @@ function AdminOverview() {
             />
           </div>
           <div>
+            <label className="block text-[11px] font-bold mb-1.5 text-muted">Senha de Acesso</label>
+            <PasswordInput
+              value={newAccountPassword}
+              onChange={(e) => setNewAccountPassword(e.target.value)}
+              placeholder="Senha do aluno"
+              className="input-base"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <div>
             <label className="block text-[11px] font-bold mb-1.5 text-muted">Saldo Inicial (R$)</label>
             <input
               type="number"
@@ -182,7 +196,7 @@ function AdminOverview() {
               className="input-base"
             />
           </div>
-          <div className="md:col-span-3 flex justify-end pt-2">
+          <div className="md:col-span-2 lg:col-span-4 flex justify-end pt-2">
             <button type="submit" className="btn-primary px-6">
               Criar Conta
             </button>
