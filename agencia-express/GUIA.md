@@ -89,3 +89,13 @@ curl -s -X POST http://localhost:4074/transferencias -H "Content-Type: applicati
 ```
 
 Como as contas vivem só em memória, se a conta 1 não for recriada antes de religar a agência, o log mostrará `CREDITO_REMOTO_FALHOU` - a mensagem chegou (RabbitMQ não perde nada), mas não havia onde aplicar o crédito.
+
+> ⚠️ **Não rode esta pasta (`agencia-express`) ao mesmo tempo que `agencia` (Python) contra a mesma `RABBITMQ_URL`.** As duas usam a mesma exchange (`iceibank.eventos`) e os mesmos nomes de fila (`fila-agencia-0/1/2`) no broker real - se ambas estiverem no ar juntas, o RabbitMQ distribui as mensagens entre quem estiver consumindo primeiro (Python ou Node), não necessariamente a agência "certa" pra quem está testando. Encerre um lado antes de subir o outro.
+
+### Parte D (linha do tempo causal)
+
+`mesclar-logs.js` também foi atualizado para a Parte D (compara vetores e aponta pares concorrentes, igual à versão Python). Rode com:
+```bash
+node mesclar-logs.js
+```
+Os comandos de teste (criar contas independentes, fazer uma transferência, conferir que o par causal não aparece como concorrente) e o guia de como tirar os prints estão detalhados em `agencia/GUIA.md` - a lógica e os passos são os mesmos, só troca `Invoke-RestMethod ... -Headers $headersAdmin` por chamadas sem token (este app de referência não tem JWT).

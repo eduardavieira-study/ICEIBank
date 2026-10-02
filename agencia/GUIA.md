@@ -221,3 +221,54 @@ Abra o frontend e confirme login + uma operação funcionando normalmente.
 git add agencia/src agencia/requirements.txt .env.example evidencias/sprint2
 git commit -m "feat(mensageria): substitui chamada REST direta por publish/subscribe via RabbitMQ"
 ```
+
+---
+
+## Parte D: Linha do tempo causal (`mesclar_logs.py`)
+
+O script foi reescrito: em vez de ordenar por um número de Lamport, ele ordena por `horaParede` e depois compara os vetores de cada par de eventos de **agências diferentes**, apontando quais são comprovadamente **concorrentes** (nenhum influenciou o outro) e deixando de fora os pares que têm relação causal (ex.: débito → crédito remoto da mesma transferência).
+
+### 1. Gera eventos independentes (concorrentes) em agências diferentes
+
+Com as 3 agências já no ar (seção 2), no 4º terminal - sem fazer nenhuma transferência entre elas, só criando contas em agências diferentes, uma logo depois da outra:
+
+```powershell
+$loginRes = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body (@{usuario="admin"; senha="admin"} | ConvertTo-Json)
+$headersAdmin = @{ Authorization = "Bearer $($loginRes.token)" }
+
+Invoke-RestMethod -Uri "http://localhost:4075/contas" -Method Post -ContentType "application/json" -Headers $headersAdmin -Body (@{id=1; nomeAluno="Bruno"; senha="bruno123"; saldoInicial=50} | ConvertTo-Json)
+Invoke-RestMethod -Uri "http://localhost:4074/contas" -Method Post -ContentType "application/json" -Headers $headersAdmin -Body (@{id=3; nomeAluno="Carla"; senha="carla123"; saldoInicial=200} | ConvertTo-Json)
+```
+
+Essas duas criações de conta não têm nenhuma relação causal entre si (nenhuma mensagem foi trocada entre as agências) - o relógio vetorial vai provar isso.
+
+### 2. Gera uma transferência (par causal, não deve aparecer como concorrente)
+
+```powershell
+$loginCarla = Invoke-RestMethod -Uri "http://localhost:4074/auth/login" -Method Post -ContentType "application/json" -Body (@{nomeAluno="Carla"; senha="carla123"} | ConvertTo-Json)
+$headersCarla = @{ Authorization = "Bearer $($loginCarla.token)" }
+Invoke-RestMethod -Uri "http://localhost:4074/transferencias" -Method Post -ContentType "application/json" -Headers $headersCarla -Body (@{idOrigem=3; idDestino=1; valor=20} | ConvertTo-Json)
+
+Start-Sleep -Seconds 2
+Invoke-RestMethod -Uri "http://localhost:4075/contas/1" -Method Get -Headers $headersAdmin   # confere que chegou (saldo 70)
+```
+
+### 3. Roda o script
+
+```powershell
+python3 agencia/mesclar_logs.py
+```
+
+Confira na saída:
+- A seção **"Linha do tempo"** lista todos os eventos das 3 agências, ordenados por hora real.
+- A seção **"Pares de eventos CONCORRENTES"** deve conter o par das duas criações de conta (Bruno x Carla) - prova de que são independentes.
+- O par `TRANSFERENCIA_DEBITO` → `TRANSFERENCIA_CREDITO_REMOTO` da transferência Carla→Bruno **não** deve aparecer nessa lista (eles têm relação de causa e efeito, então o relógio vetorial corretamente não os marca como concorrentes).
+
+📸 **Print `evidencias/sprint2/linha-do-tempo-causal.png`:** a saída completa do comando acima (`Get-Date` + o comando + as duas seções do resultado), mostrando pelo menos um par concorrente na lista.
+
+### 4. Commit
+
+```powershell
+git add agencia/mesclar_logs.py evidencias/sprint2
+git commit -m "feat(observabilidade): identifica pares de eventos concorrentes via relogio vetorial"
+```
