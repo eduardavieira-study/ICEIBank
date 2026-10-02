@@ -301,7 +301,16 @@ def consultar_historico(
                 except Exception:
                     pass
 
-    # Ordena por timestampLamport e depois por dataHora (tempo físico)
-    eventos_filtrados.sort(key=lambda x: (x.get("timestampLamport", 0), x.get("dataHora", "")))
+    def chave_ordenacao(evento):
+        vetor = evento.get("timestampVetorial", [])
+        # Normaliza para lista: logs antigos (de antes do relógio vetorial estar
+        # ligado no main.py) gravaram timestampVetorial como um número único,
+        # e não dá para comparar int com list diretamente no sort.
+        if not isinstance(vetor, list):
+            vetor = [vetor]
+        return (vetor, evento.get("dataHora", ""))
+
+    # Ordena por timestampVetorial (comparação lexicográfica) e depois por dataHora (tempo físico)
+    eventos_filtrados.sort(key=chave_ordenacao)
     return eventos_filtrados
 

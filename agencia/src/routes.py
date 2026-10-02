@@ -13,5 +13,6 @@ router.post("/contas/{id}/sacar")(contas_controller.sacar)
 router.get("/contas/{id}/historico")(contas_controller.consultar_historico)
 
 # Rotas de transferências
+# A rota /contas/{id}/creditar-remoto do Sprint 1 deixou de existir - o crédito
+# remoto agora chega via mensageria (RabbitMQ), não mais por chamada REST.
 router.post("/transferencias")(transferencias_controller.transferir)
-router.post("/contas/{id}/creditar-remoto")(transferencias_controller.creditar_remoto)

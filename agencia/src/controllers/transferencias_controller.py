@@ -1,7 +1,7 @@
 from fastapi import Request, HTTPException, status, Depends
 from pydantic import BaseModel
-import requests
 import agencia.src.config as config
+from agencia.src.services import mensageria
 from agencia.src.services.auth import validar_token, verificar_autorizacao
 
 
@@ -9,12 +9,6 @@ class TransferenciaRequest(BaseModel):
     idOrigem: int
     idDestino: int
     valor: float
-
-
-class CreditoRemotoRequest(BaseModel):
-    valor: float
-    timestampLamport: int
-    origemAgencia: int
 
 
 def transferir(
@@ -84,74 +78,68 @@ def transferir(
         )
         return {"mensagem": "Transferência concluída (mesma agência)."}
 
-    # Caso entre agências: chama a agência de destino diretamente via REST
-    ts_envio = relogio.ao_enviar()
-    agencia_info = next(
-        (a for a in config.AGENCIAS if a["id"] == agencia_destino), None
-    )
-    if not agencia_info:
-        # Reverte o débito se a agência de destino não for encontrada nas configurações
-        conta_origem["saldo"] += valor
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Configuração da agência de destino não encontrada.",
-        )
-    url_destino = agencia_info["url"]
-
+    # Caso entre agências: em vez de chamar a outra agência diretamente via
+    # REST (Sprint 1), publicamos um evento na exchange do RabbitMQ. A agência
+    # de destino consome quando puder - mesmo que esteja fora do ar agora, a
+    # mensagem fica retida na fila (durable) e é entregue quando ela voltar.
+    vetor_envio = relogio.ao_enviar()
     try:
-        response = requests.post(
-            f"{url_destino}/contas/{id_destino}/creditar-remoto",
-            json={
+        mensageria.publicar(
+            f"agencia.{agencia_destino}.creditar",
+            {
+                "idConta": id_destino,
                 "valor": valor,
-                "timestampLamport": ts_envio,
+                "vetorEnvio": vetor_envio,
                 "origemAgencia": id_agencia,
             },
-            timeout=5.0,
         )
-        if response.status_code != 200:
-            response.raise_for_status()
-        return {"mensagem": "Transferência concluída (entre agências)."}
     except Exception as e:
-        # LIMITAÇÃO CONHECIDA: se esta chamada falhar, o débito já aplicado acima
-        # NÃO é revertido - o dinheiro "desaparece" temporariamente. Por enquanto, só registramos no log.
-        ts_falha = relogio.evento_local()
-        registro.registrar(
-            "TRANSFERENCIA_FALHOU",
-            ts_falha,
-            {
-                "idOrigem": id_origem,
-                "idDestino": id_destino,
-                "valor": valor,
-                "erro": str(e),
-            },
-        )
+        # Reverte o débito se nem foi possível publicar a mensagem (ex.: RabbitMQ fora do ar)
+        conta_origem["saldo"] += valor
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Falha ao contatar agência de destino. Débito já aplicado - inconsistência conhecida (ver Sprint 4).",
+            detail=f"Falha ao publicar mensagem no RabbitMQ: {e}",
         )
 
+    return {
+        "mensagem": "Transferência publicada para a agência de destino (entrega assíncrona)."
+    }
 
-def creditar_remoto(request: Request, id: int, body: CreditoRemotoRequest):
-    contas = request.app.state.contas
-    relogio = request.app.state.relogio
-    registro = request.app.state.registro
 
-    # Ao RECEBER uma mensagem de outra agência, o relógio de Lamport é
-    # atualizado com base no timestamp recebido - é a regra 3 do algoritmo.
-    ts = relogio.ao_receber(body.timestampLamport)
+def processar_credito_remoto(app_state, mensagem: dict) -> None:
+    """Chamado pelo consumidor de mensagens (RabbitMQ) ao receber um crédito
+    vindo de outra agência. Não passa pela autenticação JWT das rotas HTTP -
+    ver Pergunta 3 da Parte C em RESPOSTAS.md."""
+    contas = app_state.contas
+    relogio = app_state.relogio
+    registro = app_state.registro
 
-    conta = contas.get(id)
+    id_conta = mensagem["idConta"]
+    valor = mensagem["valor"]
+    vetor_envio = mensagem["vetorEnvio"]
+    origem_agencia = mensagem["origemAgencia"]
+
+    # Ao RECEBER uma mensagem de outra agência, o relógio vetorial funde o
+    # vetor recebido com o próprio - é a regra 3 do algoritmo (Parte B).
+    vetor = relogio.ao_receber(vetor_envio)
+
+    conta = contas.get(id_conta)
     if not conta:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conta não encontrada nesta agência.",
+        registro.registrar(
+            "CREDITO_REMOTO_FALHOU",
+            vetor,
+            {
+                "idConta": id_conta,
+                "valor": valor,
+                "origemAgencia": origem_agencia,
+                "motivo": "conta nao encontrada",
+            },
         )
+        return
 
-    conta["saldo"] += body.valor
+    conta["saldo"] += valor
     registro.registrar(
         "TRANSFERENCIA_CREDITO_REMOTO",
-        ts,
-        {"idConta": id, "valor": body.valor, "origemAgencia": body.origemAgencia},
+        vetor,
+        {"idConta": id_conta, "valor": valor, "origemAgencia": origem_agencia},
     )
-
-    return {"mensagem": "Crédito remoto aplicado.", "saldoAtual": conta["saldo"]}

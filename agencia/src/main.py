@@ -1,13 +1,21 @@
 import os
 import sys
 import uvicorn
+from dotenv import load_dotenv
+
+# Carrega o .env da raiz do repositório antes de qualquer módulo ler
+# RABBITMQ_URL (ex.: mensageria.py, importado logo abaixo).
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import urlparse
 
 import agencia.src.config as config
-from agencia.src.services.lamport_clock import RelogioLamport
+from agencia.src.services.vector_clock import RelogioVetorial
 from agencia.src.services.event_log import RegistroEventos
+from agencia.src.services import mensageria
+from agencia.src.controllers.transferencias_controller import processar_credito_remoto
 from agencia.src.routes import router
 
 id_agencia = int(os.environ.get("AGENCIA_ID", "0"))
@@ -30,13 +38,23 @@ app.add_middleware(
 
 # Inicializando estado global da agência
 app.state.id_agencia = id_agencia
-app.state.relogio = RelogioLamport()
+app.state.relogio = RelogioVetorial(id_agencia, config.NUMERO_AGENCIAS)
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
 app.state.contas = {}
 # Hashes das senhas ficam separados das contas para nunca serem retornados nas respostas
 app.state.senhas = {}
 
 app.include_router(router)
+
+
+# Consumidor: processa créditos vindos de outras agências via RabbitMQ.
+# Roda em uma thread separada para não bloquear o servidor HTTP (uvicorn).
+@app.on_event("startup")
+def iniciar_consumidor_mensageria():
+    def ao_receber_mensagem(mensagem: dict):
+        processar_credito_remoto(app.state, mensagem)
+
+    mensageria.iniciar_consumidor_em_thread(id_agencia, ao_receber_mensagem)
 
 # Extrai a porta da URL da agência configurada
 parsed_url = urlparse(agencia_config["url"])

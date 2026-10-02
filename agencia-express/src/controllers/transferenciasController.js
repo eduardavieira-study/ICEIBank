@@ -1,5 +1,5 @@
-import axios from 'axios';
 import * as config from '../config.js';
+import { publicar } from '../services/mensageria.js';
 
 async function transferir(req, res) {
   const { contas, relogio, registro, idAgencia } = req.app.locals;
@@ -29,48 +29,50 @@ async function transferir(req, res) {
     return res.json({ mensagem: 'Transferência concluída (mesma agência).' });
   }
 
-  // Caso entre agências: chama a agência de destino diretamente via REST
-  const tsEnvio = relogio.aoEnviar();
-  const urlDestino = config.AGENCIAS.find((a) => a.id === agenciaDestino).url;
-
+  // Caso entre agências: em vez de chamar a outra agência diretamente via
+  // REST (Sprint 1), publicamos um evento na exchange do RabbitMQ. A agência
+  // de destino consome quando puder - mesmo que esteja fora do ar agora, a
+  // mensagem fica retida na fila (durable) e é entregue quando ela voltar.
+  const vetorEnvio = relogio.aoEnviar();
   try {
-    await axios.post(`${urlDestino}/contas/${idDestino}/creditar-remoto`, {
+    await publicar(`agencia.${agenciaDestino}.creditar`, {
+      idConta: idDestino,
       valor,
-      timestampLamport: tsEnvio,
+      vetorEnvio,
       origemAgencia: idAgencia,
     });
-    res.json({ mensagem: 'Transferência concluída (entre agências).' });
   } catch (erro) {
-    // LIMITAÇÃO CONHECIDA: se esta chamada falhar, o débito já aplicado acima
-    // NÃO é revertido - o dinheiro "desaparece" temporariamente. Resolver isso
-    // de forma correta (garantir atomicidade mesmo sob falha) é o assunto do
-    // Sprint 4, com uma transação distribuída de verdade (2PC/Saga). Por
-    // enquanto, só registramos a inconsistência no log.
-    registro.registrar('TRANSFERENCIA_FALHOU', relogio.eventoLocal(), {
-      idOrigem, idDestino, valor, erro: erro.message,
-    });
-    res.status(502).json({
-      erro: 'Falha ao contatar agência de destino. Débito já aplicado - inconsistência conhecida (ver Sprint 4).',
-    });
+    // Reverte o débito se nem foi possível publicar a mensagem (ex.: RabbitMQ fora do ar)
+    contaOrigem.saldo += valor;
+    return res.status(502).json({ erro: `Falha ao publicar mensagem no RabbitMQ: ${erro.message}` });
   }
+
+  res.json({ mensagem: 'Transferência publicada para a agência de destino (entrega assíncrona).' });
 }
 
-async function creditarRemoto(req, res) {
-  const { contas, relogio, registro } = req.app.locals;
-  const idConta = parseInt(req.params.id, 10);
-  const { valor, timestampLamport, origemAgencia } = req.body;
+// Chamado pelo consumidor de mensagens (RabbitMQ) ao receber um crédito vindo
+// de outra agência. Não passa por nenhuma rota HTTP/Express.
+function processarCreditoRemoto(appLocals, mensagem) {
+  const { contas, relogio, registro } = appLocals;
+  const { idConta, valor, vetorEnvio, origemAgencia } = mensagem;
 
-  // Ao RECEBER uma mensagem de outra agência, o relógio de Lamport é
-  // atualizado com base no timestamp recebido - é a regra 3 do algoritmo.
-  const ts = relogio.aoReceber(timestampLamport);
+  // Ao RECEBER uma mensagem de outra agência, o relógio vetorial funde o
+  // vetor recebido com o próprio - é a regra 3 do algoritmo (Parte B).
+  const vetor = relogio.aoReceber(vetorEnvio);
 
   const conta = contas.get(idConta);
-  if (!conta) return res.status(404).json({ erro: 'Conta não encontrada nesta agência.' });
+  if (!conta) {
+    registro.registrar('CREDITO_REMOTO_FALHOU', vetor, {
+      idConta,
+      valor,
+      origemAgencia,
+      motivo: 'conta nao encontrada',
+    });
+    return;
+  }
 
   conta.saldo += valor;
-  registro.registrar('TRANSFERENCIA_CREDITO_REMOTO', ts, { idConta, valor, origemAgencia });
-
-  res.json({ mensagem: 'Crédito remoto aplicado.', saldoAtual: conta.saldo });
+  registro.registrar('TRANSFERENCIA_CREDITO_REMOTO', vetor, { idConta, valor, origemAgencia });
 }
 
-export { transferir, creditarRemoto };
+export { transferir, processarCreditoRemoto };
