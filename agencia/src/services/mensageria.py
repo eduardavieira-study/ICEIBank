@@ -43,13 +43,15 @@ def publicar(routing_key: str, mensagem: dict) -> None:
         conexao.close()
 
 
-def _assinar(id_agencia: int, ao_receber_mensagem: Callable[[dict], None]) -> None:
+def _consumir(
+    id_agencia: int,
+    nome_fila: str,
+    routing_key: str,
+    ao_receber_mensagem: Callable[[dict], None],
+) -> None:
     conexao, canal = _conectar()
-    nome_fila = f"fila-agencia-{id_agencia}"
     canal.queue_declare(queue=nome_fila, durable=True)
-    canal.queue_bind(
-        exchange=EXCHANGE, queue=nome_fila, routing_key=f"agencia.{id_agencia}.creditar"
-    )
+    canal.queue_bind(exchange=EXCHANGE, queue=nome_fila, routing_key=routing_key)
 
     def _callback(ch, method, properties, body):
         conteudo = json.loads(body.decode("utf-8"))
@@ -61,13 +63,37 @@ def _assinar(id_agencia: int, ao_receber_mensagem: Callable[[dict], None]) -> No
     canal.start_consuming()
 
 
+def _iniciar_em_thread(target, args) -> threading.Thread:
+    # start_consuming() bloqueia o loop da thread para sempre - roda em uma
+    # thread em segundo plano para não travar o servidor HTTP do FastAPI.
+    thread = threading.Thread(target=target, args=args, daemon=True)
+    thread.start()
+    return thread
+
+
 def iniciar_consumidor_em_thread(
     id_agencia: int, ao_receber_mensagem: Callable[[dict], None]
 ) -> threading.Thread:
-    # start_consuming() bloqueia o loop da thread para sempre - roda em uma
-    # thread em segundo plano para não travar o servidor HTTP do FastAPI.
-    thread = threading.Thread(
-        target=_assinar, args=(id_agencia, ao_receber_mensagem), daemon=True
+    return _iniciar_em_thread(
+        _consumir,
+        (
+            id_agencia,
+            f"fila-agencia-{id_agencia}",
+            f"agencia.{id_agencia}.creditar",
+            ao_receber_mensagem,
+        ),
     )
-    thread.start()
-    return thread
+
+
+def iniciar_consumidor_alertas_em_thread(
+    id_agencia: int, ao_receber_alerta: Callable[[dict], None]
+) -> threading.Thread:
+    return _iniciar_em_thread(
+        _consumir,
+        (
+            id_agencia,
+            f"fila-alertas-{id_agencia}",
+            f"alerta.agencia.{id_agencia}.saldo.baixo",
+            ao_receber_alerta,
+        ),
+    )

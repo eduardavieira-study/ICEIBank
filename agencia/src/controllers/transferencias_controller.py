@@ -1,6 +1,7 @@
 from fastapi import Request, HTTPException, status, Depends
 from pydantic import BaseModel
 import agencia.src.config as config
+from agencia.src.controllers.contas_controller import notificar_saldo_baixo
 from agencia.src.services import mensageria
 from agencia.src.services.auth import validar_token, verificar_autorizacao
 
@@ -76,6 +77,7 @@ def transferir(
             ts_credito,
             {"idOrigem": id_origem, "idDestino": id_destino, "valor": valor},
         )
+        notificar_saldo_baixo(request.app.state, id_origem, conta_origem["saldo"])
         return {"mensagem": "Transferência concluída (mesma agência)."}
 
     # Caso entre agências: em vez de chamar a outra agência diretamente via
@@ -101,6 +103,7 @@ def transferir(
             detail=f"Falha ao publicar mensagem no RabbitMQ: {e}",
         )
 
+    notificar_saldo_baixo(request.app.state, id_origem, conta_origem["saldo"])
     return {
         "mensagem": "Transferência publicada para a agência de destino (entrega assíncrona)."
     }

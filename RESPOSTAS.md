@@ -98,6 +98,19 @@
 
 # Respostas - Sprint 2: ICEIBank
 
+## 2.1 Funcionalidade Adicional
+- **Funcionalidade Escolhida:** Notificação de saldo baixo (alerta em tópico separado)
+- **Descrição:** Quando um saque ou uma transferência deixa o saldo da conta de origem abaixo de `LIMITE_SALDO_BAIXO` (R$ 50,00, em `config.py`), a agência publica um evento `alerta.agencia.<id>.saldo.baixo` na exchange `iceibank.eventos`. Uma nova fila durável, `fila-alertas-<id>`, é consumida pela própria agência em uma thread separada, e cada alerta recebido é registrado no log como `ALERTA_SALDO_BAIXO`, com o relógio vetorial atualizado pela regra de recebimento.
+- **Implementação:**
+  - `config.py`: constante `LIMITE_SALDO_BAIXO = 50.0`.
+  - `services/mensageria.py`: o consumidor foi generalizado (`_consumir`), e `iniciar_consumidor_alertas_em_thread` liga a fila `fila-alertas-<id>` à routing key `alerta.agencia.<id>.saldo.baixo`.
+  - `controllers/contas_controller.py`: `notificar_saldo_baixo` publica o alerta (com `ao_enviar()`, pois é um envio), `processar_alerta_saldo_baixo` registra o evento ao receber, e `sacar` chama a notificação após o débito.
+  - `controllers/transferencias_controller.py`: a notificação é chamada nas duas saídas de sucesso (mesma agência e entre agências), sempre depois do débito efetivo.
+  - `main.py`: sobe o consumidor de alertas no startup, ao lado do consumidor de créditos.
+- **Por que essa opção:** a fila de alertas é nova, então nada que já existe na CloudAMQP precisa ser recriado ou apagado. Além disso, reaproveita o tópico `topic` e o mesmo padrão de publish/subscribe, e mostra que a mesma exchange atende a dois tipos de mensagem sem interferir no crédito entre agências.
+- **Decisões:** a publicação do alerta é best-effort. Se o RabbitMQ estiver indisponível, a falha é registrada no terminal, mas o saque ou a transferência não é desfeito, já que a operação principal já foi concluída. O alerta é consumido pela própria agência dona da conta, pois ela é quem conhece o saldo.
+- **Validação:** saque que deixa a conta em R$ 40,00 gerou `ALERTA_SALDO_BAIXO`; saque que deixa a conta em R$ 290,00 não gerou alerta; transferência que deixa a origem em R$ 40,00 gerou alerta e o crédito na outra agência continuou chegando (saldo 50 → 210).
+
 ### 6.4 Perguntas - Parte B (Relógio Vetorial)
 
 1. **Com 3 agências, o vetor tem 3 posições. Se o sistema crescesse para 10 agências, o que aconteceria com o tamanho de cada vetor anexado a cada mensagem? Isso é um problema? Por quê (ou por que não)?**

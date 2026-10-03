@@ -16,6 +16,7 @@ from agencia.src.services.vector_clock import RelogioVetorial
 from agencia.src.services.event_log import RegistroEventos
 from agencia.src.services import mensageria
 from agencia.src.controllers.transferencias_controller import processar_credito_remoto
+from agencia.src.controllers.contas_controller import processar_alerta_saldo_baixo
 from agencia.src.routes import router
 
 id_agencia = int(os.environ.get("AGENCIA_ID", "0"))
@@ -55,6 +56,11 @@ def iniciar_consumidor_mensageria():
         processar_credito_remoto(app.state, mensagem)
 
     mensageria.iniciar_consumidor_em_thread(id_agencia, ao_receber_mensagem)
+
+    def ao_receber_alerta(mensagem: dict):
+        processar_alerta_saldo_baixo(app.state, mensagem)
+
+    mensageria.iniciar_consumidor_alertas_em_thread(id_agencia, ao_receber_alerta)
 
 # Extrai a porta da URL da agência configurada
 parsed_url = urlparse(agencia_config["url"])

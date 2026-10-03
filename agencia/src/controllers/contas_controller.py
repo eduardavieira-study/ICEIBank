@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import agencia.src.config as config
 import os
 import json
+from agencia.src.services import mensageria
 from agencia.src.services.auth import (
     gerar_token,
     validar_token,
@@ -10,6 +11,35 @@ from agencia.src.services.auth import (
     gerar_hash_senha,
     verificar_senha,
 )
+
+
+def notificar_saldo_baixo(app_state, id_conta: int, saldo: float) -> None:
+    if saldo >= config.LIMITE_SALDO_BAIXO:
+        return
+    vetor = app_state.relogio.ao_enviar()
+    try:
+        mensageria.publicar(
+            f"alerta.agencia.{app_state.id_agencia}.saldo.baixo",
+            {
+                "idConta": id_conta,
+                "saldo": saldo,
+                "vetorEnvio": vetor,
+                "agencia": app_state.id_agencia,
+            },
+        )
+    except Exception as e:
+        # O alerta é complementar: a operação já foi concluída, então uma falha
+        # ao publicar não deve desfazer o saque/transferência.
+        print(f"Falha ao publicar alerta de saldo baixo: {e}")
+
+
+def processar_alerta_saldo_baixo(app_state, mensagem: dict) -> None:
+    vetor = app_state.relogio.ao_receber(mensagem["vetorEnvio"])
+    app_state.registro.registrar(
+        "ALERTA_SALDO_BAIXO",
+        vetor,
+        {"idConta": mensagem["idConta"], "saldo": mensagem["saldo"]},
+    )
 
 
 class CriarContaRequest(BaseModel):
@@ -232,6 +262,7 @@ def sacar(
         "SAQUE", ts, {"id": id, "valor": valor, "novoSaldo": conta["saldo"]}
     )
 
+    notificar_saldo_baixo(request.app.state, id, conta["saldo"])
     return conta
 
 
