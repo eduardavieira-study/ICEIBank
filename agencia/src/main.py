@@ -69,6 +69,7 @@ def iniciar_consumidor_mensageria():
     # estabelecer) quem é a líder. Em thread, pois o servidor HTTP ainda não
     # está aceitando conexões durante o startup.
     threading.Thread(target=app.state.bully.iniciar_eleicao, daemon=True).start()
+    app.state.bully.iniciar_heartbeat()
 
 # Extrai a porta da URL da agência configurada
 parsed_url = urlparse(agencia_config["url"])

@@ -1,4 +1,5 @@
 import threading
+import time
 import requests
 import agencia.src.config as config
 
@@ -88,3 +89,36 @@ class ServicoBully:
     def obter_lider_atual(self):
         with self._lock:
             return self._lider_atual
+
+    def verificar_lider(self) -> None:
+        lider = self.obter_lider_atual()
+        if lider is None:
+            self.iniciar_eleicao()
+            return
+        if lider == self.id_agencia:
+            return  # eu sou a líder, nada a verificar
+
+        lider_info = next(a for a in config.AGENCIAS if a["id"] == lider)
+        try:
+            requests.get(f"{lider_info['url']}/bully/lider", timeout=TIMEOUT_S)
+        except requests.exceptions.RequestException:
+            vetor = self.relogio.evento_local()
+            self.registro.registrar(
+                "LIDER_NAO_RESPONDEU",
+                vetor,
+                {"liderAtual": lider, "agencia": self.id_agencia},
+            )
+            with self._lock:
+                self._lider_atual = None
+            self.iniciar_eleicao()
+
+    def iniciar_heartbeat(self, intervalo_s: float = 3) -> None:
+        def laco():
+            while True:
+                time.sleep(intervalo_s)
+                try:
+                    self.verificar_lider()
+                except Exception as e:
+                    print(f"Falha no heartbeat: {e}")
+
+        threading.Thread(target=laco, daemon=True).start()

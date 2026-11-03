@@ -50,4 +50,5 @@ const porta = new URL(agenciaConfig.url).port;
 app.listen(porta, () => {
   console.log(`[Agência ${idAgencia}] ouvindo na porta ${porta}`);
   bully.iniciarEleicao();
+  bully.iniciarHeartbeat();
 });
