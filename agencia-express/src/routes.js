@@ -13,4 +13,22 @@ router.post('/contas/:id/sacar', contasController.sacar);
 // remoto agora chega via mensageria (RabbitMQ), não mais por chamada REST.
 router.post('/transferencias', transferenciasController.transferir);
 
+// Rotas do algoritmo de Bully (eleição de líder entre as agências)
+router.post('/bully/eleicao', (req, res) => {
+  const { origemId, vetorEnvio } = req.body;
+  req.app.locals.bully.receberEleicao(origemId, vetorEnvio);
+  res.sendStatus(200);
+});
+
+router.post('/bully/coordenador', (req, res) => {
+  const { liderId, vetorEnvio } = req.body;
+  req.app.locals.bully.receberCoordenador(liderId, vetorEnvio);
+  res.sendStatus(200);
+});
+
+router.get('/bully/lider', (req, res) => {
+  const liderAtual = req.app.locals.bully.obterLiderAtual();
+  res.json({ idAgencia: req.app.locals.idAgencia, liderAtual });
+});
+
 export default router;

@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 import uvicorn
 from dotenv import load_dotenv
 
@@ -14,6 +15,7 @@ from urllib.parse import urlparse
 import agencia.src.config as config
 from agencia.src.services.vector_clock import RelogioVetorial
 from agencia.src.services.event_log import RegistroEventos
+from agencia.src.services.bully_service import ServicoBully
 from agencia.src.services import mensageria
 from agencia.src.controllers.transferencias_controller import processar_credito_remoto
 from agencia.src.controllers.contas_controller import processar_alerta_saldo_baixo
@@ -41,6 +43,7 @@ app.add_middleware(
 app.state.id_agencia = id_agencia
 app.state.relogio = RelogioVetorial(id_agencia, config.NUMERO_AGENCIAS)
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
+app.state.bully = ServicoBully(id_agencia, app.state.relogio, app.state.registro)
 app.state.contas = {}
 # Hashes das senhas ficam separados das contas para nunca serem retornados nas respostas
 app.state.senhas = {}
@@ -61,6 +64,11 @@ def iniciar_consumidor_mensageria():
         processar_alerta_saldo_baixo(app.state, mensagem)
 
     mensageria.iniciar_consumidor_alertas_em_thread(id_agencia, ao_receber_alerta)
+
+    # Ao subir, cada agência dispara sua própria eleição para descobrir (ou
+    # estabelecer) quem é a líder. Em thread, pois o servidor HTTP ainda não
+    # está aceitando conexões durante o startup.
+    threading.Thread(target=app.state.bully.iniciar_eleicao, daemon=True).start()
 
 # Extrai a porta da URL da agência configurada
 parsed_url = urlparse(agencia_config["url"])

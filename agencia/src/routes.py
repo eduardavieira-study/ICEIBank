@@ -1,8 +1,43 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from pydantic import BaseModel
 import agencia.src.controllers.contas_controller as contas_controller
 import agencia.src.controllers.transferencias_controller as transferencias_controller
 
 router = APIRouter()
+
+
+class EleicaoRequest(BaseModel):
+    origemId: int
+    vetorEnvio: list[int]
+
+
+class CoordenadorRequest(BaseModel):
+    liderId: int
+    vetorEnvio: list[int]
+
+
+# Rotas do algoritmo de Bully (eleição de líder entre as agências).
+# Sem autenticação: são mensagens internas entre agências (ver RESPOSTAS.md).
+@router.post("/bully/eleicao")
+def bully_eleicao(request: Request, body: EleicaoRequest):
+    request.app.state.bully.receber_eleicao(body.origemId, body.vetorEnvio)
+    return {"ok": True}
+
+
+@router.post("/bully/coordenador")
+def bully_coordenador(request: Request, body: CoordenadorRequest):
+    request.app.state.bully.receber_coordenador(body.liderId, body.vetorEnvio)
+    return {"ok": True}
+
+
+@router.get("/bully/lider")
+def bully_lider(request: Request):
+    return {
+        "idAgencia": request.app.state.id_agencia,
+        "liderAtual": request.app.state.bully.obter_lider_atual(),
+    }
+
+
 
 # Rotas de contas
 router.post("/auth/login")(contas_controller.login)
