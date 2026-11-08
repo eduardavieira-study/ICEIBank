@@ -40,7 +40,10 @@ class ApiClient {
   final http.Client _http;
   String? token;
 
-  ApiClient(this.baseUrl, {this.token, http.Client? client})
+  final Duration timeout;
+
+  ApiClient(this.baseUrl,
+      {this.token, http.Client? client, this.timeout = _timeoutPadrao})
       : _http = client ?? http.Client();
 
   Future<Map<String, dynamic>> get(String caminho) =>
@@ -61,7 +64,7 @@ class ApiClient {
 
     http.Response resposta;
     try {
-      final streamed = await _http.send(requisicao).timeout(_timeoutPadrao);
+      final streamed = await _http.send(requisicao).timeout(timeout);
       resposta = await http.Response.fromStream(streamed);
     } on TimeoutException {
       throw const ApiException('A agência demorou demais para responder.');

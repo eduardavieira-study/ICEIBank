@@ -6,6 +6,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/contas_service.dart';
+import 'services/lideranca_service.dart';
 import 'theme/tema.dart';
 
 void main() {
@@ -16,8 +17,10 @@ class IceiBankApp extends StatefulWidget {
   final SessaoStorage? storage;
   final AuthService? auth;
   final ContasService? contas;
+  final LiderancaService? lideranca;
 
-  const IceiBankApp({super.key, this.storage, this.auth, this.contas});
+  const IceiBankApp(
+      {super.key, this.storage, this.auth, this.contas, this.lideranca});
 
   @override
   State<IceiBankApp> createState() => _IceiBankAppState();
@@ -93,6 +96,7 @@ class _IceiBankAppState extends State<IceiBankApp> {
         contas: _contas,
         aoSair: _aoSair,
         aoSessaoExpirada: _aoSessaoExpirada,
+        lideranca: widget.lideranca,
       );
     }
 

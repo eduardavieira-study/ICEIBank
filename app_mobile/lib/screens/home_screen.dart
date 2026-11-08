@@ -6,10 +6,12 @@ import '../models/conta.dart';
 import '../models/sessao.dart';
 import '../services/api_client.dart';
 import '../services/contas_service.dart';
+import '../services/lideranca_service.dart';
 import '../theme/cores.dart';
 import '../util/formato.dart';
 import '../widgets/marca.dart';
 import '../widgets/movimentacao_sheet.dart';
+import '../widgets/painel_lideranca.dart';
 import '../widgets/transferencia_sheet.dart';
 
 // Tela principal do aluno: saldo da conta. Puxar para baixo atualiza.
@@ -18,6 +20,7 @@ class HomeScreen extends StatefulWidget {
   final ContasService contas;
   final VoidCallback aoSair;
   final VoidCallback aoSessaoExpirada;
+  final LiderancaService? lideranca;
 
   const HomeScreen({
     super.key,
@@ -25,6 +28,7 @@ class HomeScreen extends StatefulWidget {
     required this.contas,
     required this.aoSair,
     required this.aoSessaoExpirada,
+    this.lideranca,
   });
 
   @override
@@ -35,6 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Conta? _conta;
   bool _carregando = true;
   String? _erro;
+  // Inicializado na declaração (e não no initState) para o hot reload não
+  // deixar o campo sem valor em uma tela que já estava aberta.
+  late final LiderancaService _lideranca =
+      widget.lideranca ?? LiderancaService();
 
   @override
   void initState() {
@@ -93,12 +101,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final mensagem = await mostrarTransferencia(
       context,
       sessao: widget.sessao,
-      executar: (idDestino, valor) => widget.contas
-          .transferir(widget.sessao, idDestino: idDestino, valor: valor),
+      executar: (idDestino, valor) => widget.contas.transferir(
+        widget.sessao,
+        idDestino: idDestino,
+        valor: valor,
+      ),
       aoNaoAutorizado: widget.aoSessaoExpirada,
     );
     if (mensagem == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(mensagem)));
     // o débito já foi feito na origem: recarrega o saldo
     await _carregar();
   }
@@ -214,6 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(LucideIcons.arrowRightLeft, size: 16),
                   label: const Text('Transferir'),
                 ),
+                const SizedBox(height: 24),
+                PainelLideranca(servico: _lideranca),
               ],
             ),
           ),
