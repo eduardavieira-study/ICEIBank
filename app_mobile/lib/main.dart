@@ -6,6 +6,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/contas_service.dart';
+import 'theme/tema.dart';
 
 void main() {
   runApp(const IceiBankApp());
@@ -66,16 +67,15 @@ class _IceiBankAppState extends State<IceiBankApp> {
     } else if (_sessao!.ehAdmin) {
       tela = AdminScreen(sessao: _sessao!, contas: _contas, aoSair: _aoSair);
     } else {
-      tela = HomeScreen(sessao: _sessao!, aoSair: _aoSair);
+      tela = HomeScreen(sessao: _sessao!, contas: _contas, aoSair: _aoSair);
     }
 
     return MaterialApp(
       title: 'ICEIBank',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E5AA8)),
-        useMaterial3: true,
-      ),
+      theme: TemaIceiBank.claro(),
+      darkTheme: TemaIceiBank.escuro(),
+      themeMode: ThemeMode.system,
       home: tela,
     );
   }

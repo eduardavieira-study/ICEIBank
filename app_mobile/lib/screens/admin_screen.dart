@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../config/agencias.dart';
 import '../models/sessao.dart';
 import '../services/api_client.dart';
 import '../services/contas_service.dart';
+import '../widgets/marca.dart';
 
 // Área do administrador: criação de contas na agência do login. Útil para
 // montar a demonstração sem precisar de Invoke-RestMethod.
@@ -101,7 +103,7 @@ class _AdminScreenState extends State<AdminScreen> {
       decoration: BoxDecoration(color: fundo, borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          Icon(icone, color: frente),
+          Icon(icone, color: frente, size: 16),
           const SizedBox(width: 8),
           Expanded(child: Text(texto, style: TextStyle(color: frente))),
         ],
@@ -115,11 +117,17 @@ class _AdminScreenState extends State<AdminScreen> {
     final agencia = agencias[widget.sessao.agenciaId];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Administração'),
+        title: const Row(
+          children: [
+            LogoIceiBank(),
+            SizedBox(width: 8),
+            Text('/ Administração'),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Sair',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(LucideIcons.logOut, size: 16),
             onPressed: widget.aoSair,
           ),
         ],
@@ -173,12 +181,12 @@ class _AdminScreenState extends State<AdminScreen> {
                 validator: _validarSaldo,
               ),
               if (_erro != null)
-                _caixa(_erro!, Icons.error_outline, tema.colorScheme.errorContainer,
+                _caixa(_erro!, LucideIcons.triangleAlert, tema.colorScheme.errorContainer,
                     tema.colorScheme.onErrorContainer, const Key('mensagem-erro')),
               if (_sucesso != null)
-                _caixa(_sucesso!, Icons.check_circle_outline,
-                    tema.colorScheme.primaryContainer,
-                    tema.colorScheme.onPrimaryContainer, const Key('mensagem-sucesso')),
+                _caixa(_sucesso!, LucideIcons.circleCheck,
+                    tema.colorScheme.tertiaryContainer,
+                    tema.colorScheme.onTertiaryContainer, const Key('mensagem-sucesso')),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _carregando ? null : _criar,

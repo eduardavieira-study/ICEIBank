@@ -1,4 +1,5 @@
 import '../config/agencias.dart';
+import '../models/conta.dart';
 import '../models/sessao.dart';
 import 'api_client.dart';
 
@@ -8,6 +9,16 @@ class ContasService {
 
   ContasService({ApiClient Function(Agencia, String token)? criarCliente})
       : _criarCliente = criarCliente ?? ((a, t) => ApiClient(a.url, token: t));
+
+  // Saldo da conta da própria pessoa autenticada (GET /contas/{id}).
+  Future<Conta> consultarSaldo(Sessao sessao) async {
+    final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
+    try {
+      return Conta.deJson(await api.get('/contas/${sessao.idConta}'));
+    } finally {
+      api.close();
+    }
+  }
 
   // Só o administrador pode criar contas (a API responde 403 aos demais).
   Future<Map<String, dynamic>> criarConta(

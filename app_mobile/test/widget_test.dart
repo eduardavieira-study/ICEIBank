@@ -6,6 +6,8 @@ import 'package:app_mobile/main.dart';
 import 'package:app_mobile/models/sessao.dart';
 import 'package:app_mobile/services/api_client.dart';
 import 'package:app_mobile/services/auth_service.dart';
+import 'package:app_mobile/services/contas_service.dart';
+import 'package:app_mobile/models/conta.dart';
 
 class _AuthFalso extends AuthService {
   final Sessao? sessao;
@@ -24,6 +26,12 @@ class _AuthFalso extends AuthService {
   }
 }
 
+class _ContasFalso extends ContasService {
+  @override
+  Future<Conta> consultarSaldo(Sessao sessao) async =>
+      Conta(id: sessao.idConta ?? 0, nomeAluno: sessao.nomeAluno ?? '', saldo: 100);
+}
+
 Future<void> _preencher(WidgetTester tester, String nome, String senha) async {
   await tester.enterText(find.byKey(const Key('campo-nome')), nome);
   await tester.enterText(find.byKey(const Key('campo-senha')), senha);
@@ -33,7 +41,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('sem sessão salva, abre na tela de login', (tester) async {
-    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso()));
+    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
     await tester.pumpAndSettle();
 
     expect(find.text('Entrar'), findsOneWidget);
@@ -42,7 +50,7 @@ void main() {
 
   testWidgets('campos vazios mostram validação e não chamam a API', (tester) async {
     final auth = _AuthFalso();
-    await tester.pumpWidget(IceiBankApp(auth: auth));
+    await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Entrar'));
@@ -58,7 +66,7 @@ void main() {
       sessao: const Sessao(
           token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena'),
     );
-    await tester.pumpWidget(IceiBankApp(auth: auth));
+    await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('1'));
@@ -75,7 +83,7 @@ void main() {
     final auth = _AuthFalso(
       erro: const ApiException('Nome ou senha inválidos na Agência 0.', statusCode: 401),
     );
-    await tester.pumpWidget(IceiBankApp(auth: auth));
+    await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
 
     await _preencher(tester, 'Ana', 'errada');
@@ -95,7 +103,7 @@ void main() {
       'ICEIBANK_ID_CONTA': 0,
       'ICEIBANK_NOME_ALUNO': 'Ana',
     });
-    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso()));
+    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
     await tester.pumpAndSettle();
 
     expect(find.text('Olá, Ana'), findsOneWidget);

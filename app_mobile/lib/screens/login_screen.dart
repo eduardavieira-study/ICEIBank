@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../config/agencias.dart';
 import '../models/sessao.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../widgets/marca.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService auth;
@@ -68,13 +70,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.account_balance, size: 56, color: tema.colorScheme.primary),
-                    const SizedBox(height: 8),
-                    Text('ICEIBank',
-                        textAlign: TextAlign.center,
-                        style: tema.textTheme.headlineMedium),
+                    const Center(child: IconeMarca()),
+                    const SizedBox(height: 12),
+                    const Center(child: LogoIceiBank(tamanho: 32)),
                     const SizedBox(height: 32),
-                    Text('Agência', style: tema.textTheme.labelLarge),
+                    Text('Agência', style: tema.textTheme.labelMedium),
                     const SizedBox(height: 8),
                     SegmentedButton<int>(
                       segments: [
@@ -88,9 +88,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     SegmentedButton<bool>(
+                      showSelectedIcon: false,
                       segments: const [
-                        ButtonSegment(value: false, label: Text('Aluno')),
-                        ButtonSegment(value: true, label: Text('Admin')),
+                        ButtonSegment(
+                            value: false,
+                            icon: Icon(LucideIcons.user, size: 16),
+                            label: Text('Aluno')),
+                        ButtonSegment(
+                            value: true,
+                            icon: Icon(LucideIcons.shield, size: 16),
+                            label: Text('Admin')),
                       ],
                       selected: {_admin},
                       onSelectionChanged: _carregando
@@ -108,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: _admin ? 'Usuário' : 'Nome',
-                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIcon: const Icon(LucideIcons.user, size: 16),
                         border: const OutlineInputBorder(),
                       ),
                       validator: (v) => (v == null || v.trim().isEmpty)
@@ -124,13 +131,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       onFieldSubmitted: (_) => _entrar(),
                       decoration: InputDecoration(
                         labelText: 'Senha',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(LucideIcons.lock, size: 16),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           tooltip: _senhaVisivel ? 'Ocultar senha' : 'Mostrar senha',
                           icon: Icon(_senhaVisivel
-                              ? Icons.visibility_off
-                              : Icons.visibility),
+                              ? LucideIcons.eyeOff
+                              : LucideIcons.eye,
+                              size: 16),
                           onPressed: () =>
                               setState(() => _senhaVisivel = !_senhaVisivel),
                         ),
@@ -149,7 +157,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
+                            Icon(LucideIcons.triangleAlert,
+                                size: 16,
                                 color: tema.colorScheme.onErrorContainer),
                             const SizedBox(width: 8),
                             Expanded(
