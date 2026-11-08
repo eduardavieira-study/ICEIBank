@@ -10,6 +10,7 @@ import '../theme/cores.dart';
 import '../util/formato.dart';
 import '../widgets/marca.dart';
 import '../widgets/movimentacao_sheet.dart';
+import '../widgets/transferencia_sheet.dart';
 
 // Tela principal do aluno: saldo da conta. Puxar para baixo atualiza.
 class HomeScreen extends StatefulWidget {
@@ -83,6 +84,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _transferir() async {
+    final mensagem = await mostrarTransferencia(
+      context,
+      sessao: widget.sessao,
+      executar: (idDestino, valor) => widget.contas
+          .transferir(widget.sessao, idDestino: idDestino, valor: valor),
+      aoNaoAutorizado: widget.aoSair,
+    );
+    if (mensagem == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
+    // o débito já foi feito na origem: recarrega o saldo
+    await _carregar();
   }
 
   @override
@@ -188,6 +203,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  key: const Key('acao-transferir'),
+                  onPressed: podeMovimentar ? _transferir : null,
+                  icon: const Icon(LucideIcons.arrowRightLeft, size: 16),
+                  label: const Text('Transferir'),
                 ),
               ],
             ),

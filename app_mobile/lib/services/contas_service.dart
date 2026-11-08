@@ -37,6 +37,27 @@ class ContasService {
     }
   }
 
+  // Transferência a partir da própria conta. Na mesma agência ela é imediata;
+  // entre agências o crédito é entregue de forma assíncrona (RabbitMQ). Devolve
+  // a mensagem da API, que diz qual dos dois casos ocorreu.
+  Future<String> transferir(
+    Sessao sessao, {
+    required int idDestino,
+    required double valor,
+  }) async {
+    final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
+    try {
+      final json = await api.post('/transferencias', {
+        'idOrigem': sessao.idConta,
+        'idDestino': idDestino,
+        'valor': valor,
+      });
+      return json['mensagem'] as String? ?? 'Transferência efetuada com sucesso!';
+    } finally {
+      api.close();
+    }
+  }
+
   // Só o administrador pode criar contas (a API responde 403 aos demais).
   Future<Map<String, dynamic>> criarConta(
     Sessao sessao, {
