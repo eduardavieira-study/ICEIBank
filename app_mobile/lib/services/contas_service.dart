@@ -20,6 +20,23 @@ class ContasService {
     }
   }
 
+  // Depósito e saque na própria conta. A API devolve a conta já atualizada.
+  Future<Conta> depositar(Sessao sessao, double valor) =>
+      _movimentar(sessao, 'depositar', valor);
+
+  Future<Conta> sacar(Sessao sessao, double valor) =>
+      _movimentar(sessao, 'sacar', valor);
+
+  Future<Conta> _movimentar(Sessao sessao, String operacao, double valor) async {
+    final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
+    try {
+      final json = await api.post('/contas/${sessao.idConta}/$operacao', {'valor': valor});
+      return Conta.deJson(json);
+    } finally {
+      api.close();
+    }
+  }
+
   // Só o administrador pode criar contas (a API responde 403 aos demais).
   Future<Map<String, dynamic>> criarConta(
     Sessao sessao, {
