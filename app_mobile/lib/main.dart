@@ -31,6 +31,7 @@ class _IceiBankAppState extends State<IceiBankApp> {
   // null = ainda lendo o armazenamento local; carregado = decidido.
   bool _carregado = false;
   Sessao? _sessao;
+  String? _aviso; // mostrado na tela de login (ex.: sessão expirada)
 
   @override
   void initState() {
@@ -49,12 +50,27 @@ class _IceiBankAppState extends State<IceiBankApp> {
 
   Future<void> _aoLogar(Sessao sessao) async {
     await _storage.salvar(sessao);
-    setState(() => _sessao = sessao);
+    setState(() {
+      _sessao = sessao;
+      _aviso = null;
+    });
   }
 
   Future<void> _aoSair() async {
     await _storage.limpar();
-    setState(() => _sessao = null);
+    setState(() {
+      _sessao = null;
+      _aviso = null;
+    });
+  }
+
+  // 401 da API: o token venceu ou é inválido. Volta ao login explicando o motivo.
+  Future<void> _aoSessaoExpirada() async {
+    await _storage.limpar();
+    setState(() {
+      _sessao = null;
+      _aviso = 'Sua sessão expirou. Faça login novamente.';
+    });
   }
 
   @override
@@ -63,11 +79,21 @@ class _IceiBankAppState extends State<IceiBankApp> {
     if (!_carregado) {
       tela = const Scaffold(body: Center(child: CircularProgressIndicator()));
     } else if (_sessao == null) {
-      tela = LoginScreen(auth: _auth, aoLogar: _aoLogar);
+      tela = LoginScreen(auth: _auth, aoLogar: _aoLogar, aviso: _aviso);
     } else if (_sessao!.ehAdmin) {
-      tela = AdminScreen(sessao: _sessao!, contas: _contas, aoSair: _aoSair);
+      tela = AdminScreen(
+        sessao: _sessao!,
+        contas: _contas,
+        aoSair: _aoSair,
+        aoSessaoExpirada: _aoSessaoExpirada,
+      );
     } else {
-      tela = HomeScreen(sessao: _sessao!, contas: _contas, aoSair: _aoSair);
+      tela = HomeScreen(
+        sessao: _sessao!,
+        contas: _contas,
+        aoSair: _aoSair,
+        aoSessaoExpirada: _aoSessaoExpirada,
+      );
     }
 
     return MaterialApp(

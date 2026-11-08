@@ -87,7 +87,8 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(mensagem);
-    } on ApiException catch (e) {
+    } catch (erro) {
+      final e = ApiException.de(erro);
       if (!mounted) return;
       if (e.naoAutorizado) {
         // Token expirado ou inválido: fecha o formulário e volta ao login.

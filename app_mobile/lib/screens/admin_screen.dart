@@ -13,12 +13,14 @@ class AdminScreen extends StatefulWidget {
   final Sessao sessao;
   final ContasService contas;
   final VoidCallback aoSair;
+  final VoidCallback aoSessaoExpirada;
 
   const AdminScreen({
     super.key,
     required this.sessao,
     required this.contas,
     required this.aoSair,
+    required this.aoSessaoExpirada,
   });
 
   @override
@@ -82,11 +84,12 @@ class _AdminScreenState extends State<AdminScreen> {
       _nomeCtrl.clear();
       _senhaCtrl.clear();
       _saldoCtrl.text = '0';
-    } on ApiException catch (e) {
+    } catch (erro) {
+      final e = ApiException.de(erro);
       if (!mounted) return;
       if (e.naoAutorizado) {
         // Token expirado ou inválido: volta ao login.
-        widget.aoSair();
+        widget.aoSessaoExpirada();
         return;
       }
       setState(() => _erro = e.mensagem);

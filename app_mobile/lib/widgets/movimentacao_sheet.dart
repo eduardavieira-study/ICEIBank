@@ -77,7 +77,8 @@ class _MovimentacaoSheetState extends State<_MovimentacaoSheet> {
       final conta = await widget.executar(valor);
       if (!mounted) return;
       Navigator.of(context).pop((conta: conta, valor: valor));
-    } on ApiException catch (e) {
+    } catch (erro) {
+      final e = ApiException.de(erro);
       if (!mounted) return;
       if (e.naoAutorizado) {
         // Token expirado ou inválido: fecha o formulário e volta ao login.

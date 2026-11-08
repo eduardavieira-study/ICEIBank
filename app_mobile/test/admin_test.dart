@@ -14,14 +14,16 @@ class _AuthFalso extends AuthService {
   bool chamouAluno = false;
 
   @override
-  Future<Sessao> loginAdmin(Agencia agencia, String usuario, String senha) async {
+  Future<Sessao> loginAdmin(Agencia agencia, String usuario, String senha,
+      {int? expiraEmSegundos}) async {
     agenciaUsada = agencia;
     usuarioUsado = usuario;
     return Sessao(token: 'adm', role: 'admin', agenciaId: agencia.id);
   }
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha) async {
+  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
+      {int? expiraEmSegundos}) async {
     chamouAluno = true;
     throw const ApiException('não deveria chamar');
   }

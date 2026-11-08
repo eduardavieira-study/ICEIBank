@@ -5,6 +5,11 @@ const int offset = 74;
 const int portaBase = 4000 + offset;
 const int numeroAgencias = 3;
 
+// Validade do token em segundos, só para testes (o backend aceita
+// `expirar_em_segundos` no login). Ex.: flutter run --dart-define=TOKEN_EXPIRA_EM=15
+// Sem o parâmetro, vale 0 = o padrão do backend (30 minutos).
+const int tokenExpiraEmSegundos = int.fromEnvironment('TOKEN_EXPIRA_EM');
+
 // O emulador Android enxerga o computador em 10.0.2.2 (localhost aponta para
 // o próprio emulador). O simulador iOS compartilha a rede do Mac.
 // Em um dispositivo físico, troque pelo IP do computador na rede local.

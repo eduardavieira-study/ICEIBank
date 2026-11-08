@@ -18,7 +18,8 @@ class _AuthFalso extends AuthService {
   _AuthFalso({this.sessao, this.erro});
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha) async {
+  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
+      {int? expiraEmSegundos}) async {
     agenciaUsada = agencia;
     nomeUsado = nomeAluno;
     if (erro != null) throw erro!;

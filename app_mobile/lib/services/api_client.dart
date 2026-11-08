@@ -13,6 +13,13 @@ class ApiException implements Exception {
 
   const ApiException(this.mensagem, {this.statusCode});
 
+  // Qualquer erro vira uma ApiException apresentável: o que não for da API
+  // (ex.: resposta malformada) não pode escapar sem tratamento nem mostrar
+  // texto técnico para a pessoa.
+  factory ApiException.de(Object erro) => erro is ApiException
+      ? erro
+      : const ApiException('Algo deu errado. Tente novamente em instantes.');
+
   // 401: token ausente, inválido ou expirado - o app deve voltar ao login.
   bool get naoAutorizado => statusCode == 401;
 

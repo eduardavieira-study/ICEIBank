@@ -17,12 +17,14 @@ class HomeScreen extends StatefulWidget {
   final Sessao sessao;
   final ContasService contas;
   final VoidCallback aoSair;
+  final VoidCallback aoSessaoExpirada;
 
   const HomeScreen({
     super.key,
     required this.sessao,
     required this.contas,
     required this.aoSair,
+    required this.aoSessaoExpirada,
   });
 
   @override
@@ -49,11 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final conta = await widget.contas.consultarSaldo(widget.sessao);
       if (!mounted) return;
       setState(() => _conta = conta);
-    } on ApiException catch (e) {
+    } catch (erro) {
+      final e = ApiException.de(erro);
       if (!mounted) return;
       if (e.naoAutorizado) {
         // Token expirado ou inválido: volta ao login.
-        widget.aoSair();
+        widget.aoSessaoExpirada();
         return;
       }
       setState(() => _erro = e.mensagem);
@@ -69,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       executar: (valor) => tipo == TipoMovimentacao.deposito
           ? widget.contas.depositar(widget.sessao, valor)
           : widget.contas.sacar(widget.sessao, valor),
-      aoNaoAutorizado: widget.aoSair,
+      aoNaoAutorizado: widget.aoSessaoExpirada,
     );
     if (resultado == null || !mounted) return;
     setState(() {
@@ -92,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
       sessao: widget.sessao,
       executar: (idDestino, valor) => widget.contas
           .transferir(widget.sessao, idDestino: idDestino, valor: valor),
-      aoNaoAutorizado: widget.aoSair,
+      aoNaoAutorizado: widget.aoSessaoExpirada,
     );
     if (mensagem == null || !mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
