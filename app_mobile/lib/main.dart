@@ -60,6 +60,8 @@ class _IceiBankAppState extends State<IceiBankApp> {
   }
 
   Future<void> _aoSair() async {
+    final sessao = _sessao;
+    if (sessao != null) await _contas.limparCache(sessao);
     await _storage.limpar();
     setState(() {
       _sessao = null;

@@ -39,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Conta? _conta;
   bool _carregando = true;
   String? _erro;
+  // Quando a agência não responde, a tela mostra a última leitura guardada no
+  // aparelho. Este campo guarda quando ela foi feita (null = dado ao vivo).
+  DateTime? _desatualizadoDesde;
   // Inicializado na declaração (e não no initState) para o hot reload não
   // deixar o campo sem valor em uma tela que já estava aberta.
   late final LiderancaService _lideranca =
@@ -58,7 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final conta = await widget.contas.consultarSaldo(widget.sessao);
       if (!mounted) return;
-      setState(() => _conta = conta);
+      setState(() {
+        _conta = conta;
+        _desatualizadoDesde = null;
+      });
     } catch (erro) {
       final e = ApiException.de(erro);
       if (!mounted) return;
@@ -66,6 +72,18 @@ class _HomeScreenState extends State<HomeScreen> {
         // Token expirado ou inválido: volta ao login.
         widget.aoSessaoExpirada();
         return;
+      }
+      if (e.indisponivel) {
+        // sem conexão com a agência: usa o último saldo conhecido, se houver
+        final emCache = await widget.contas.saldoEmCache(widget.sessao);
+        if (!mounted) return;
+        if (emCache != null) {
+          setState(() {
+            _conta = emCache.conta;
+            _desatualizadoDesde = emCache.atualizadoEm;
+          });
+          return;
+        }
       }
       setState(() => _erro = e.mensagem);
     } finally {
@@ -119,7 +137,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final agencia = agencias[widget.sessao.agenciaId];
-    final podeMovimentar = _conta != null && !_carregando;
+    // com o saldo desatualizado (sem conexão) as ações ficam bloqueadas por
+    // enquanto; a fila de operações pendentes vem na próxima etapa
+    final podeMovimentar =
+        _conta != null && !_carregando && _desatualizadoDesde == null;
 
     return Scaffold(
       appBar: AppBar(
@@ -187,6 +208,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+                if (_desatualizadoDesde != null) ...[
+                  _AvisoOffline(desde: _desatualizadoDesde!),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _carregando ? null : _carregar,
+                    icon: const Icon(LucideIcons.refreshCw, size: 15),
+                    label: const Text('Tentar de novo'),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 _CartaoSaldo(
                   nome: widget.sessao.nomeAluno ?? '',
                   agencia: agencia.nome,
@@ -232,6 +263,43 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Aviso de que o saldo mostrado é a última leitura guardada no aparelho.
+class _AvisoOffline extends StatelessWidget {
+  final DateTime desde;
+
+  const _AvisoOffline({required this.desde});
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final escuro = tema.brightness == Brightness.dark;
+    final ambar = escuro ? const Color(0xFFFCD34D) : const Color(0xFFD97706);
+
+    return Container(
+      key: const Key('aviso-offline'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ambar.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: ambar.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.wifiOff, size: 16, color: ambar),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Sem conexão com a agência. Mostrando o último saldo '
+              'conhecido, de ${formatarDataHora(desde)}.',
+              style: tema.textTheme.bodySmall?.copyWith(color: ambar),
+            ),
+          ),
+        ],
       ),
     );
   }

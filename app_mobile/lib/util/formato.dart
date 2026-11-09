@@ -13,3 +13,9 @@ String formatarReais(double valor) {
   final sinal = valor < 0 && centavos > 0 ? '-' : '';
   return '${sinal}R\$ $grupos,$decimais';
 }
+
+// Data e hora curtas para avisos (ex.: 08/11 às 14:32).
+String formatarDataHora(DateTime t) {
+  String dois(int n) => n.toString().padLeft(2, '0');
+  return '${dois(t.day)}/${dois(t.month)} às ${dois(t.hour)}:${dois(t.minute)}';
+}

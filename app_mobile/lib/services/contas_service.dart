@@ -2,21 +2,40 @@ import '../config/agencias.dart';
 import '../models/conta.dart';
 import '../models/sessao.dart';
 import 'api_client.dart';
+import 'cache_conta.dart';
 
 // Operações de conta na agência em que a pessoa está autenticada.
 class ContasService {
   final ApiClient Function(Agencia, String token) _criarCliente;
+  final CacheConta _cache;
 
-  ContasService({ApiClient Function(Agencia, String token)? criarCliente})
-      : _criarCliente = criarCliente ?? ((a, t) => ApiClient(a.url, token: t));
+  ContasService({
+    ApiClient Function(Agencia, String token)? criarCliente,
+    CacheConta? cache,
+  })  : _criarCliente = criarCliente ?? ((a, t) => ApiClient(a.url, token: t)),
+        _cache = cache ?? CacheConta();
 
-  // Saldo da conta da própria pessoa autenticada (GET /contas/{id}).
+  // Saldo da conta da própria pessoa autenticada (GET /contas/{id}). Toda
+  // leitura bem-sucedida atualiza a cópia local, usada quando não há conexão.
   Future<Conta> consultarSaldo(Sessao sessao) async {
     final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
     try {
-      return Conta.deJson(await api.get('/contas/${sessao.idConta}'));
+      final conta = Conta.deJson(await api.get('/contas/${sessao.idConta}'));
+      await _cache.salvar(sessao.agenciaId, conta);
+      return conta;
     } finally {
       api.close();
+    }
+  }
+
+  // Última leitura guardada no aparelho (null se nunca houve uma).
+  Future<ContaEmCache?> saldoEmCache(Sessao sessao) =>
+      _cache.carregar(sessao.agenciaId, sessao.idConta!);
+
+  // Apaga a cópia local (ao sair do app, para não deixar saldo para trás).
+  Future<void> limparCache(Sessao sessao) async {
+    if (sessao.idConta != null) {
+      await _cache.limpar(sessao.agenciaId, sessao.idConta!);
     }
   }
 
