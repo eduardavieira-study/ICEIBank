@@ -5,12 +5,13 @@ import 'screens/admin_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/conectividade.dart';
 import 'services/contas_service.dart';
 import 'services/lideranca_service.dart';
 import 'theme/tema.dart';
 
 void main() {
-  runApp(const IceiBankApp());
+  runApp(IceiBankApp(conectividade: MonitorConectividadeReal()));
 }
 
 class IceiBankApp extends StatefulWidget {
@@ -18,9 +19,16 @@ class IceiBankApp extends StatefulWidget {
   final AuthService? auth;
   final ContasService? contas;
   final LiderancaService? lideranca;
+  // null nos testes (sem plugin nativo); o app real passa o monitor de rede
+  final MonitorConectividade? conectividade;
 
   const IceiBankApp(
-      {super.key, this.storage, this.auth, this.contas, this.lideranca});
+      {super.key,
+      this.storage,
+      this.auth,
+      this.contas,
+      this.lideranca,
+      this.conectividade});
 
   @override
   State<IceiBankApp> createState() => _IceiBankAppState();
@@ -99,6 +107,7 @@ class _IceiBankAppState extends State<IceiBankApp> {
         aoSair: _aoSair,
         aoSessaoExpirada: _aoSessaoExpirada,
         lideranca: widget.lideranca,
+        conectividade: widget.conectividade,
       );
     }
 

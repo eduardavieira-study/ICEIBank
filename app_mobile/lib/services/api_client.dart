@@ -2,16 +2,28 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 const _timeoutPadrao = Duration(seconds: 5);
+
+// Chave de teste: quando ligada, todas as chamadas às agências falham como se
+// não houvesse conexão, sem derrubar o servidor (que perderia as contas, já que
+// elas ficam só na memória). Só é exposta na tela em builds de debug.
+class SimulacaoRede {
+  static final semConexao = ValueNotifier<bool>(false);
+}
 
 // Erro já traduzido para uma mensagem que pode ir direto para a tela.
 class ApiException implements Exception {
   final int? statusCode;
   final String mensagem;
 
-  const ApiException(this.mensagem, {this.statusCode});
+  // Corpo da resposta de erro, quando houver. O 409 da sincronização offline
+  // traz aqui o estado atual da conta (contaAtual, vetorAtual, relacao).
+  final Map<String, dynamic>? corpo;
+
+  const ApiException(this.mensagem, {this.statusCode, this.corpo});
 
   // Qualquer erro vira uma ApiException apresentável: o que não for da API
   // (ex.: resposta malformada) não pode escapar sem tratamento nem mostrar
@@ -57,6 +69,10 @@ class ApiClient {
     String caminho, {
     Map<String, dynamic>? corpo,
   }) async {
+    if (SimulacaoRede.semConexao.value) {
+      throw const ApiException('Não foi possível conectar à agência.');
+    }
+
     final requisicao = http.Request(metodo, Uri.parse('$baseUrl$caminho'));
     requisicao.headers['Content-Type'] = 'application/json';
     if (token != null) requisicao.headers['Authorization'] = 'Bearer $token';
@@ -81,6 +97,7 @@ class ApiClient {
     throw ApiException(
       _mensagemDeErro(json, resposta.statusCode),
       statusCode: resposta.statusCode,
+      corpo: json,
     );
   }
 
@@ -99,7 +116,8 @@ class ApiClient {
   // O FastAPI devolve {"detail": "..."}; erros de validação (422) trazem uma
   // lista em "detail", então caímos numa mensagem genérica nesse caso.
   String _mensagemDeErro(Map<String, dynamic> json, int status) {
-    final detalhe = json['detail'];
+    // FastAPI usa "detail"; a agência de referência em Node usa "erro"
+    final detalhe = json['detail'] ?? json['erro'];
     if (detalhe is String) return detalhe;
     return 'Erro inesperado da agência (HTTP $status).';
   }

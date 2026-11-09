@@ -37,6 +37,7 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.5.6
   lucide_icons_flutter: ^4.0.2
+  connectivity_plus: ^7.3.2
 
 dev_dependencies:
   flutter_test:
