@@ -46,6 +46,8 @@ router.get("/contas/{id}")(contas_controller.consultar_saldo)
 router.post("/contas/{id}/depositar")(contas_controller.depositar)
 router.post("/contas/{id}/sacar")(contas_controller.sacar)
 router.get("/contas/{id}/historico")(contas_controller.consultar_historico)
+# Sincronização de operações feitas offline (detecta conflito via relógio vetorial)
+router.post("/contas/{id}/sincronizar")(contas_controller.sincronizar_operacao_pendente)
 
 # Rotas de transferências
 # A rota /contas/{id}/creditar-remoto do Sprint 1 deixou de existir - o crédito

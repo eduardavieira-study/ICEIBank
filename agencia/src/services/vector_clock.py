@@ -6,7 +6,19 @@ class RelogioVetorial:
     def __init__(self, id_agencia: int, numero_agencias: int):
         self.id_agencia = id_agencia
         self.vetor = [0] * numero_agencias
-        self._lock = threading.Lock()
+        # RLock: a rota de sincronização segura a trava enquanto compara o vetor
+        # e aplica a operação, e evento_local() pede a mesma trava de novo.
+        self._lock = threading.RLock()
+
+    def obter_vetor_atual(self) -> List[int]:
+        # Só lê: ao contrário dos outros métodos, não conta como evento.
+        with self._lock:
+            return list(self.vetor)
+
+    def bloquear(self):
+        # Uso: `with relogio.bloquear(): ...` - nenhum outro evento altera o
+        # vetor enquanto o bloco roda.
+        return self._lock
 
     def evento_local(self) -> List[int]:
         with self._lock:

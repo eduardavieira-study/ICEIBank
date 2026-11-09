@@ -1,9 +1,11 @@
 from fastapi import Request, HTTPException, status, Depends
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import agencia.src.config as config
 import os
 import json
 from agencia.src.services import mensageria
+from agencia.src.services.comparar_vetores import comparar_vetores
 from agencia.src.services.auth import (
     gerar_token,
     validar_token,
@@ -51,6 +53,12 @@ class CriarContaRequest(BaseModel):
 
 class TransacaoRequest(BaseModel):
     valor: float
+
+
+class SincronizarRequest(BaseModel):
+    tipo: str
+    valor: float
+    vetorConhecido: list[int]
 
 
 class LoginRequest(BaseModel):
@@ -174,7 +182,8 @@ def consultar_saldo(request: Request, id: int, payload: dict = Depends(validar_t
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conta não encontrada nesta agência.",
         )
-    return contas[id]
+    # O app guarda o vetorAtual para devolvê-lo ao sincronizar operações feitas offline
+    return {**contas[id], "vetorAtual": request.app.state.relogio.obter_vetor_atual()}
 
 
 def depositar(
@@ -345,3 +354,91 @@ def consultar_historico(
     eventos_filtrados.sort(key=chave_ordenacao)
     return eventos_filtrados
 
+
+
+def sincronizar_operacao_pendente(
+    request: Request,
+    id: int,
+    body: SincronizarRequest,
+    payload: dict = Depends(validar_token),
+):
+    """Aplica uma operação feita offline pelo app, mas só se a agência não mudou
+    desde a última leitura do app: o vetor que o app conhecia precisa ser IGUAL
+    ao vetor atual da agência. Caso contrário devolve 409 com o estado atual,
+    para o app decidir o que fazer (não resolve o conflito sozinha)."""
+    if not verificar_autorizacao(payload, id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para sincronizar operações desta conta.",
+        )
+
+    contas = request.app.state.contas
+    relogio = request.app.state.relogio
+    registro = request.app.state.registro
+
+    conta = contas.get(id)
+    if not conta:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conta não encontrada nesta agência.",
+        )
+
+    if body.tipo not in ("DEPOSITO", "SAQUE"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de operação pendente não suportado.",
+        )
+    if body.valor <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O valor da operação deve ser maior que zero.",
+        )
+    if len(body.vetorConhecido) != config.NUMERO_AGENCIAS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"O vetor conhecido deve ter {config.NUMERO_AGENCIAS} posições.",
+        )
+
+    # Comparar e aplicar precisam ser atômicos: sem a trava, duas sincronizações
+    # com o mesmo vetor poderiam passar juntas e a operação seria aplicada duas vezes.
+    with relogio.bloquear():
+        vetor_atual = relogio.obter_vetor_atual()
+        relacao = comparar_vetores(body.vetorConhecido, vetor_atual)
+
+        if relacao != "IGUAIS":
+            # Qualquer diferença conta como conflito: a agência avançou enquanto o
+            # app estava offline (ANTES), foi reiniciada e perdeu o estado (DEPOIS)
+            # ou os dois divergiram (CONCORRENTES). Não aplica às cegas.
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={
+                    "detail": "Conflito detectado: o estado da conta mudou desde a última sincronização do app.",
+                    "relacao": relacao,
+                    "vetorConhecido": body.vetorConhecido,
+                    "vetorAtual": vetor_atual,
+                    "contaAtual": conta,
+                },
+            )
+
+        if body.tipo == "SAQUE" and conta["saldo"] < body.valor:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Saldo insuficiente."
+            )
+
+        vetor = relogio.evento_local()
+        if body.tipo == "DEPOSITO":
+            conta["saldo"] += body.valor
+        else:
+            conta["saldo"] -= body.valor
+
+    registro.registrar(
+        "SINCRONIZACAO_OFFLINE",
+        vetor,
+        {"id": id, "tipo": body.tipo, "valor": body.valor, "novoSaldo": conta["saldo"]},
+    )
+
+    if body.tipo == "SAQUE":
+        notificar_saldo_baixo(request.app.state, id, conta["saldo"])
+
+    # Devolve o vetor novo: o app precisa dele para a próxima sincronização
+    return {**conta, "vetorAtual": vetor}

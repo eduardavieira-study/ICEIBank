@@ -4,6 +4,11 @@ class RelogioVetorial {
     this.vetor = new Array(numeroAgencias).fill(0);
   }
 
+  // Só lê: ao contrário dos outros métodos, não conta como evento.
+  obterVetorAtual() {
+    return [...this.vetor];
+  }
+
   eventoLocal() {
     this.vetor[this.idAgencia] += 1;
     return [...this.vetor];
