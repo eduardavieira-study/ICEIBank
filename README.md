@@ -33,8 +33,11 @@ ICEIBank/
 │   ├── mesclar_logs.py          # Script para mesclar logs em uma linha do tempo unificada
 │   └── requirements.txt         # Dependências de bibliotecas Python
 ├── agencia-express/             # Backend de referência em Node.js (material de consulta)
+├── app_mobile/                  # App Flutter (Sprint 3): fluxo bancário, painel da líder e offline-first
 ├── evidencias/
-│   └── sprint1/                 # Capturas de tela provando funcionamento do sistema
+│   ├── sprint1/                 # Capturas de tela provando funcionamento do sistema
+│   ├── sprint2/
+│   └── sprint3/
 ├── frontend/                    # Frontend Web (React + Vite)
 │   ├── src/
 │   │   ├── components/          # Componentes React modulares e reutilizáveis
@@ -74,6 +77,73 @@ ICEIBank/
 * **Ferramenta de Build:** Vite
 * **Estilização:** Tailwind CSS & PostCSS
 * **Ícones:** Lucide React
+
+### Mobile
+* **Framework:** Flutter 3.x (Dart 3.13+), em [app_mobile/](app_mobile/)
+* **Comunicação com a API:** `http` (cliente REST com token JWT)
+* **Armazenamento local (offline-first):** `shared_preferences` (sessão, cache de saldo/vetor e fila de operações pendentes)
+* **Detecção de conectividade:** `connectivity_plus` (sincronização automática ao reconectar)
+* **Ícones e fontes:** `lucide_icons_flutter`, Sora e Inter embutidas no app
+* **Testes:** `flutter_test`
+
+---
+
+## 📱 Como rodar o app mobile (Flutter)
+
+O app em [app_mobile/](app_mobile/) é um cliente a mais da mesma API das agências: login, saldo, depósito, saque, transferência, painel da líder (Bully) e modo offline-first com fila de sincronização.
+
+### Pré-requisitos
+* Flutter SDK instalado (`flutter doctor` sem erros críticos), conforme [docs.flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install)
+* Um emulador Android (ou simulador iOS no macOS), ou um aparelho físico com depuração USB
+* As 3 agências no ar e o `.env` com a `RABBITMQ_URL` configurado (veja `.env.example`)
+
+### 1. Subir o backend (3 agências)
+Na raiz do repositório, em 3 terminais, com o ambiente virtual ativo (detalhes em [agencia/GUIA.md](agencia/GUIA.md)):
+
+```bash
+# macOS/Linux (use $env:AGENCIA_ID="0" no PowerShell)
+AGENCIA_ID=0 python3 -m agencia.src.main   # porta 4074
+AGENCIA_ID=1 python3 -m agencia.src.main   # porta 4075
+AGENCIA_ID=2 python3 -m agencia.src.main   # porta 4076
+```
+
+Após alguns segundos, as agências elegem a líder sozinhas (normalmente a Agência 2). Confira em `http://localhost:4074/bully/lider`.
+
+### 2. Rodar o app
+```bash
+cd app_mobile
+flutter pub get
+flutter devices          # lista emuladores e aparelhos disponíveis
+flutter run              # ou: flutter run -d <id-do-dispositivo>
+```
+
+### 3. Endereço do backend por plataforma
+O endereço é definido em [app_mobile/lib/config/agencias.dart](app_mobile/lib/config/agencias.dart):
+
+| Onde o app roda | Host usado | O que fazer |
+|---|---|---|
+| Emulador Android | `10.0.2.2` | Nada: já é o padrão |
+| Simulador iOS | `localhost` | Nada: já é o padrão |
+| Aparelho físico | IP do computador | Trocar `hostBackend` pelo IP do PC na rede local (ex.: `192.168.0.10`), com celular e PC no mesmo Wi-Fi |
+
+Se você mudou o `OFFSET` em `agencia/src/config.py`, ajuste o mesmo valor em `agencias.dart` (`offset = 74`).
+
+### 4. Primeiro acesso
+1. Entre como **administrador** (`admin` / `admin`) e crie uma conta de aluno. A conta `id` pertence à agência `id % 3`.
+2. Saia e entre como aluno, escolhendo a agência correta, com o nome e a senha cadastrados.
+
+### 5. Testando as funcionalidades da Sprint 3
+* **Painel da líder:** fica na tela principal e atualiza a cada 3 segundos. Derrube a líder (`Ctrl+C` no terminal dela) e veja a coroa passar para a nova líder sem tocar na tela.
+* **Offline-first:** ative o modo avião (ou desligue o Wi-Fi) e faça um depósito. Ele aparece como *pendente* e o saldo fica *provisório*. Ao reconectar, o app sincroniza sozinho.
+* **Conflito (HTTP 409):** faça uma operação offline e, antes de reconectar, altere o saldo da mesma conta por outro caminho (frontend web ou `Invoke-RestMethod`). Ao reconectar, o app mostra o cartão "Conflito de sincronização" com o saldo real e as opções de reenviar ou descartar.
+* **Token curto para testes:** `flutter run --dart-define=TOKEN_EXPIRA_EM=15` faz o token expirar em 15 segundos, útil para ver o tratamento de sessão expirada (401).
+
+### Testes e análise estática
+```bash
+cd app_mobile
+flutter analyze
+flutter test
+```
 
 ---
 
