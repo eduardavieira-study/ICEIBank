@@ -110,12 +110,22 @@ AGENCIA_ID=2 python3 -m agencia.src.main   # porta 4076
 Após alguns segundos, as agências elegem a líder sozinhas (normalmente a Agência 2). Confira em `http://localhost:4074/bully/lider`.
 
 ### 2. Rodar o app
+Com as 3 agências no ar, abra um **novo terminal** (os outros ficam ocupados com o backend):
+
 ```bash
 cd app_mobile
-flutter pub get
-flutter devices          # lista emuladores e aparelhos disponíveis
-flutter run              # ou: flutter run -d <id-do-dispositivo>
+flutter pub get                    # baixa as dependências (só na primeira vez)
+
+flutter emulators                  # lista os emuladores instalados
+flutter emulators --launch Pixel_8 # abre o emulador (troque pelo nome que aparecer na lista)
+
+flutter devices                    # confirma que o emulador já aparece como dispositivo
+flutter run                        # compila e abre o app no emulador
 ```
+
+Se houver mais de um dispositivo conectado, escolha um com `flutter run -d <id-do-dispositivo>`.
+
+Dicas durante o `flutter run`: `r` recarrega o código (hot reload), `R` reinicia o app (hot restart) e `q` encerra.
 
 ### 3. Endereço do backend por plataforma
 O endereço é definido em [app_mobile/lib/config/agencias.dart](app_mobile/lib/config/agencias.dart):
@@ -191,7 +201,9 @@ flutter test
 
 ## 🤖 Uso de Inteligência Artificial
 
-Este projeto foi desenvolvido em modelo de *pair programming* (programação em par) em colaboração com o **Antigravity**, uma inteligência artificial do time Google DeepMind. A IA colaborou ativamente na tradução dos conceitos de controle e rotas do Express para FastAPI, na modularização estrutural e responsividade do frontend em React e na escrita da documentação do repositório.
+**Sprints 1 e 2 (backend e frontend web):** este projeto foi desenvolvido em modelo de *pair programming* (programação em par) em colaboração com o **Antigravity**, uma inteligência artificial do time Google DeepMind. A IA colaborou ativamente na tradução dos conceitos de controle e rotas do Express para FastAPI, na modularização estrutural e responsividade do frontend em React e na escrita da documentação do repositório.
+
+**Sprint 3 (app mobile e sincronização offline-first):** utilizei o **Claude Code**, assistente de IA da Anthropic, como apoio no desenvolvimento do app Flutter em [app_mobile/](app_mobile/) (telas, serviços, cache local, fila de operações pendentes e testes automatizados), do endpoint de sincronização `/contas/{id}/sincronizar` do backend, na revisão do projeto contra o checklist da entrega e na escrita desta documentação. Os commits dessa parte levam a indicação de coautoria. Todo o código gerado foi revisado, executado e testado por mim, e consigo explicar e defender qualquer trecho entregue.
 
 ---
 
