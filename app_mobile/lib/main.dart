@@ -8,7 +8,9 @@ import 'services/auth_service.dart';
 import 'services/conectividade.dart';
 import 'services/contas_service.dart';
 import 'services/lideranca_service.dart';
+import 'theme/controlador_tema.dart';
 import 'theme/tema.dart';
+import 'widgets/fundo.dart';
 
 void main() {
   runApp(IceiBankApp(conectividade: MonitorConectividadeReal()));
@@ -22,13 +24,14 @@ class IceiBankApp extends StatefulWidget {
   // null nos testes (sem plugin nativo); o app real passa o monitor de rede
   final MonitorConectividade? conectividade;
 
-  const IceiBankApp(
-      {super.key,
-      this.storage,
-      this.auth,
-      this.contas,
-      this.lideranca,
-      this.conectividade});
+  const IceiBankApp({
+    super.key,
+    this.storage,
+    this.auth,
+    this.contas,
+    this.lideranca,
+    this.conectividade,
+  });
 
   @override
   State<IceiBankApp> createState() => _IceiBankAppState();
@@ -48,6 +51,7 @@ class _IceiBankAppState extends State<IceiBankApp> {
   void initState() {
     super.initState();
     _restaurarSessao();
+    controladorTema.carregar();
   }
 
   Future<void> _restaurarSessao() async {
@@ -111,13 +115,19 @@ class _IceiBankAppState extends State<IceiBankApp> {
       );
     }
 
-    return MaterialApp(
-      title: 'ICEIBank',
-      debugShowCheckedModeBanner: false,
-      theme: TemaIceiBank.claro(),
-      darkTheme: TemaIceiBank.escuro(),
-      themeMode: ThemeMode.system,
-      home: tela,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: controladorTema,
+      builder: (context, modo, _) => MaterialApp(
+        title: 'ICEIBank',
+        debugShowCheckedModeBanner: false,
+        theme: TemaIceiBank.claro(),
+        darkTheme: TemaIceiBank.escuro(),
+        themeMode: modo,
+        themeAnimationDuration: const Duration(milliseconds: 250),
+        // o fundo radial fica atrás de todas as telas e sheets
+        builder: (context, child) => FundoIceiBank(child: child!),
+        home: tela,
+      ),
     );
   }
 }

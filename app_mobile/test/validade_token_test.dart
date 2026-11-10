@@ -109,7 +109,7 @@ void main() {
     expect(find.text('R\$ 300,00'), findsOneWidget);
 
     contas.expirado = true; // passaram os 15 segundos
-    await tester.drag(find.byType(ListView), const Offset(0, 400)); // puxar para atualizar
+    await tester.drag(find.byType(ListView), const Offset(0, 1200)); // puxar para atualizar
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('aviso-login')), findsOneWidget);

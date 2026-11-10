@@ -15,6 +15,7 @@ import '../services/contas_service.dart';
 import '../services/lideranca_service.dart';
 import '../theme/cores.dart';
 import '../util/formato.dart';
+import '../widgets/fundo.dart';
 import '../widgets/marca.dart';
 import '../widgets/movimentacao_sheet.dart';
 import '../widgets/painel_lideranca.dart';
@@ -214,8 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _reenviarConflito() =>
-      _sincronizar(partirDoVetorAtual: true);
+  Future<void> _reenviarConflito() => _sincronizar(partirDoVetorAtual: true);
 
   Future<void> _descartarConflito() async {
     final conflito = _conflito;
@@ -284,16 +284,19 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_tentativaSemConexao && _desatualizadoDesde == null) {
         final emCache = await widget.contas.saldoEmCache(widget.sessao);
         if (!mounted) return;
-        setState(() => _desatualizadoDesde =
-            emCache?.atualizadoEm ?? DateTime.now());
+        setState(
+          () => _desatualizadoDesde = emCache?.atualizadoEm ?? DateTime.now(),
+        );
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_tentativaSemConexao || _desatualizadoDesde != null
-              ? '$nome de $valor registrado sem conexão. '
-                  'Será enviado quando a agência voltar.'
-              : '$nome de $valor colocado na fila, atrás das operações '
-                  'pendentes.'),
+          content: Text(
+            _tentativaSemConexao || _desatualizadoDesde != null
+                ? '$nome de $valor registrado sem conexão. '
+                      'Será enviado quando a agência voltar.'
+                : '$nome de $valor colocado na fila, atrás das operações '
+                      'pendentes.',
+          ),
         ),
       );
       return;
@@ -354,11 +357,13 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const LogoIceiBank(),
         actions: [
+          const AlternarTema(),
           IconButton(
             tooltip: 'Sair',
-            icon: const Icon(LucideIcons.logOut, size: 16),
+            icon: const Icon(LucideIcons.logOut, size: 18),
             onPressed: widget.aoSair,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Center(
@@ -371,16 +376,29 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24),
               children: [
-                Text(
-                  'Olá, ${widget.sessao.nomeAluno ?? 'aluno'}',
-                  style: tema.textTheme.headlineSmall,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Olá, ${widget.sessao.nomeAluno ?? 'aluno'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tema.textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Conta ${widget.sessao.idConta} · ${agencia.nome}',
+                            style: tema.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Conta ${widget.sessao.idConta} · ${agencia.nome}',
-                  style: tema.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
                 if (_erro != null) ...[
                   Container(
                     key: const Key('erro-saldo'),
@@ -522,8 +540,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       key: const Key('simular-offline'),
                       value: SimulacaoRede.semConexao.value,
                       onChanged: _alternarSimulacao,
-                      title: Text('Simular sem conexão',
-                          style: tema.textTheme.bodyMedium),
+                      title: Text(
+                        'Simular sem conexão',
+                        style: tema.textTheme.bodyMedium,
+                      ),
                       subtitle: Text(
                         'Só em builds de teste: faz o app agir como se as '
                         'agências estivessem inacessíveis, sem derrubá-las.',
@@ -566,10 +586,12 @@ class _ListaPendentes extends StatelessWidget {
                 Icon(LucideIcons.clock, size: 16, color: ambar),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Aguardando sincronização',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tema.textTheme.titleMedium),
+                  child: Text(
+                    'Aguardando sincronização',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.textTheme.titleMedium,
+                  ),
                 ),
                 if (sincronizando)
                   const SizedBox(
@@ -581,8 +603,10 @@ class _ListaPendentes extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text('Estas operações ainda não foram confirmadas pela agência.',
-                style: tema.textTheme.bodySmall),
+            Text(
+              'Estas operações ainda não foram confirmadas pela agência.',
+              style: tema.textTheme.bodySmall,
+            ),
             const SizedBox(height: 12),
             for (final o in pendentes)
               Padding(
@@ -598,14 +622,17 @@ class _ListaPendentes extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: ambar.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text('pendente',
-                          style: tema.textTheme.bodySmall
-                              ?.copyWith(color: ambar)),
+                      child: Text(
+                        'pendente',
+                        style: tema.textTheme.bodySmall?.copyWith(color: ambar),
+                      ),
                     ),
                   ],
                 ),
@@ -663,8 +690,10 @@ class _CartaoAviso extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(titulo,
-                    style: tema.textTheme.titleSmall?.copyWith(color: cor)),
+                Text(
+                  titulo,
+                  style: tema.textTheme.titleSmall?.copyWith(color: cor),
+                ),
                 for (final l in linhas) ...[
                   const SizedBox(height: 2),
                   Text(l, style: tema.textTheme.bodySmall),
@@ -716,14 +745,18 @@ class _CartaoConflito extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(LucideIcons.triangleAlert,
-                  size: 16, color: tema.colorScheme.onErrorContainer),
+              Icon(
+                LucideIcons.triangleAlert,
+                size: 16,
+                color: tema.colorScheme.onErrorContainer,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Conflito de sincronização',
-                  style: tema.textTheme.titleSmall
-                      ?.copyWith(color: tema.colorScheme.onErrorContainer),
+                  style: tema.textTheme.titleSmall?.copyWith(
+                    color: tema.colorScheme.onErrorContainer,
+                  ),
                 ),
               ),
             ],
@@ -732,22 +765,25 @@ class _CartaoConflito extends StatelessWidget {
           Text(
             'A conta mudou na agência enquanto você estava sem conexão, então '
             'esta operação não foi aplicada automaticamente:',
-            style: tema.textTheme.bodySmall
-                ?.copyWith(color: tema.colorScheme.onErrorContainer),
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: tema.colorScheme.onErrorContainer,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             '${op.tipo.rotulo} de ${formatarReais(op.valor)}',
             key: const Key('conflito-operacao'),
-            style: tema.textTheme.titleSmall
-                ?.copyWith(color: tema.colorScheme.onErrorContainer),
+            style: tema.textTheme.titleSmall?.copyWith(
+              color: tema.colorScheme.onErrorContainer,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Saldo real na agência: ${formatarReais(conflito.contaAtual.saldo)}',
             key: const Key('conflito-saldo-real'),
-            style: tema.textTheme.bodySmall
-                ?.copyWith(color: tema.colorScheme.onErrorContainer),
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: tema.colorScheme.onErrorContainer,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -763,8 +799,10 @@ class _CartaoConflito extends StatelessWidget {
               TextButton(
                 key: const Key('descartar-conflito'),
                 onPressed: ocupado ? null : aoDescartar,
-                child: Text('Descartar',
-                    style: TextStyle(color: tema.colorScheme.onErrorContainer)),
+                child: Text(
+                  'Descartar',
+                  style: TextStyle(color: tema.colorScheme.onErrorContainer),
+                ),
               ),
             ],
           ),
@@ -811,6 +849,7 @@ class _AvisoOffline extends StatelessWidget {
   }
 }
 
+
 // Cartão com o gradiente da marca, como o BankCard do frontend web.
 class _CartaoSaldo extends StatelessWidget {
   final String nome;
@@ -829,83 +868,145 @@ class _CartaoSaldo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    final branco = Colors.white;
-
     return AspectRatio(
       aspectRatio: 1.6,
       child: Container(
-        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: Paleta.gradienteMarca,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Paleta.primary[600]!.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Paleta.secondary[600]!.withValues(alpha: 0.35),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: Paleta.primary[600]!.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // círculos translúcidos de enfeite, como o brilho do cartão web
+              Positioned(
+                right: -50,
+                top: -50,
+                child: _Circulo(tamanho: 190, alpha: 0.12),
+              ),
+              Positioned(
+                left: -40,
+                bottom: -70,
+                child: _Circulo(tamanho: 170, alpha: 0.08),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: _ConteudoCartao(
+                  nome: nome,
+                  agencia: agencia,
+                  saldo: saldo,
+                  provisorio: provisorio,
+                  carregando: carregando,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Circulo extends StatelessWidget {
+  final double tamanho;
+  final double alpha;
+
+  const _Circulo({required this.tamanho, required this.alpha});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: tamanho,
+    height: tamanho,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: alpha),
+    ),
+  );
+}
+
+class _ConteudoCartao extends StatelessWidget {
+  final String nome;
+  final String agencia;
+  final double? saldo;
+  final bool provisorio;
+  final bool carregando;
+
+  const _ConteudoCartao({
+    required this.nome,
+    required this.agencia,
+    required this.saldo,
+    required this.provisorio,
+    required this.carregando,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    final branco = Colors.white;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'ICEIBank',
-                  style: tema.titleMedium?.copyWith(color: branco),
-                ),
-                Icon(
-                  LucideIcons.landmark,
-                  size: 18,
-                  color: branco.withValues(alpha: 0.8),
-                ),
-              ],
+            Text('ICEIBank', style: tema.titleMedium?.copyWith(color: branco)),
+            Icon(
+              LucideIcons.landmark,
+              size: 18,
+              color: branco.withValues(alpha: 0.8),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provisorio ? 'Saldo provisório' : 'Saldo disponível',
-                  style: tema.bodySmall?.copyWith(
-                    color: branco.withValues(alpha: 0.75),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (saldo != null)
-                  Text(
-                    formatarReais(saldo!),
-                    key: const Key('saldo-valor'),
-                    style: tema.headlineMedium?.copyWith(color: branco),
-                  )
-                else if (carregando)
-                  const SizedBox(
-                    height: 32,
-                    width: 32,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                else
-                  Text(
-                    '—',
-                    style: tema.headlineMedium?.copyWith(color: branco),
-                  ),
-              ],
-            ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              '$nome · $agencia',
+              provisorio ? 'Saldo provisório' : 'Saldo disponível',
               style: tema.bodySmall?.copyWith(
                 color: branco.withValues(alpha: 0.75),
               ),
             ),
+            const SizedBox(height: 4),
+            if (saldo != null)
+              Text(
+                formatarReais(saldo!),
+                key: const Key('saldo-valor'),
+                style: tema.headlineMedium?.copyWith(color: branco),
+              )
+            else if (carregando)
+              const SizedBox(
+                height: 32,
+                width: 32,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else
+              Text('—', style: tema.headlineMedium?.copyWith(color: branco)),
           ],
         ),
-      ),
+        Text(
+          '$nome · $agencia',
+          style: tema.bodySmall?.copyWith(
+            color: branco.withValues(alpha: 0.75),
+          ),
+        ),
+      ],
     );
   }
 }

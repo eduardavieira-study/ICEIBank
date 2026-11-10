@@ -10,12 +10,12 @@ class TemaIceiBank {
   static ThemeData escuro() => _construir(Brightness.dark);
 
   static TextStyle _sora(double tamanho, double peso, Color cor) => TextStyle(
-        fontFamily: 'Sora',
-        fontSize: tamanho,
-        fontWeight: FontWeight.values[(peso ~/ 100) - 1],
-        fontVariations: [FontVariation('wght', peso)],
-        color: cor,
-      );
+    fontFamily: 'Sora',
+    fontSize: tamanho,
+    fontWeight: FontWeight.values[(peso ~/ 100) - 1],
+    fontVariations: [FontVariation('wght', peso)],
+    color: cor,
+  );
 
   // As fontes são variáveis: o eixo de peso precisa ser definido de forma
   // explícita, além do FontWeight.
@@ -26,17 +26,22 @@ class TemaIceiBank {
   }
 
   static TextTheme _textos(Brightness b, TokensIceiBank t) {
-    final base = ThemeData(brightness: b)
-        .textTheme
+    final base = ThemeData(brightness: b).textTheme
         .apply(fontFamily: 'Inter', bodyColor: t.text, displayColor: t.text);
     final comVariacoes = base.copyWith(
       // texto digitado nos campos (o web usa text-sm, 14px)
       bodyLarge: _variavel(base.bodyLarge?.copyWith(fontSize: 14)),
       bodyMedium: _variavel(base.bodyMedium),
       bodySmall: _variavel(base.bodySmall)?.copyWith(color: t.textMuted),
-      labelLarge: _variavel(base.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
-      labelMedium: _variavel(base.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
-      labelSmall: _variavel(base.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+      labelLarge: _variavel(
+        base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      labelMedium: _variavel(
+        base.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      labelSmall: _variavel(
+        base.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+      ),
     );
     // Títulos em Sora, como o `font-display` do web.
     return comVariacoes.copyWith(
@@ -62,8 +67,12 @@ class TemaIceiBank {
       onPrimaryContainer: escuro ? Paleta.primary[100]! : Paleta.primary[900]!,
       secondary: Paleta.secondary[500]!,
       onSecondary: Colors.white,
-      secondaryContainer: escuro ? Paleta.secondary[900]! : Paleta.secondary[100]!,
-      onSecondaryContainer: escuro ? Paleta.secondary[100]! : Paleta.secondary[900]!,
+      secondaryContainer: escuro
+          ? Paleta.secondary[900]!
+          : Paleta.secondary[100]!,
+      onSecondaryContainer: escuro
+          ? Paleta.secondary[100]!
+          : Paleta.secondary[900]!,
       // verde-água: cor de sucesso do design system
       tertiary: Paleta.accent[500]!,
       onTertiary: Colors.white,
@@ -71,8 +80,12 @@ class TemaIceiBank {
       onTertiaryContainer: escuro ? Paleta.accent[200]! : Paleta.accent[800]!,
       error: const Color(0xFFEF4444),
       onError: Colors.white,
-      errorContainer: escuro ? const Color(0xFF3B1218) : const Color(0xFFFEE2E2),
-      onErrorContainer: escuro ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C),
+      errorContainer: escuro
+          ? const Color(0xFF3B1218)
+          : const Color(0xFFFEE2E2),
+      onErrorContainer: escuro
+          ? const Color(0xFFFCA5A5)
+          : const Color(0xFFB91C1C),
       surface: t.surface,
       onSurface: t.text,
       onSurfaceVariant: t.textMuted,
@@ -81,26 +94,41 @@ class TemaIceiBank {
       outlineVariant: t.border,
     );
 
-    OutlineInputBorder campo(Color cor, [double largura = 1]) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+    OutlineInputBorder campo(Color cor, [double largura = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: cor, width: largura),
         );
 
-    final retangulo8 = RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
+    final botao = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    );
+    // sombra arroxeada e bem suave no claro; preta no escuro
+    final sombra = escuro
+        ? Colors.black.withValues(alpha: 0.5)
+        : Paleta.primary[600]!.withValues(alpha: 0.12);
+    final estiloBotao = _variavel(
+      const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 14.5,
+        fontWeight: FontWeight.w700,
+      ),
+    );
     final textos = _textos(b, t);
 
     return ThemeData(
       useMaterial3: true,
       brightness: b,
       colorScheme: esquema,
-      scaffoldBackgroundColor: t.bg,
+      // transparente: quem desenha o fundo é o FundoIceiBank (radiais rosadas)
+      scaffoldBackgroundColor: Colors.transparent,
       fontFamily: 'Inter',
       textTheme: textos,
       extensions: [t],
       iconTheme: const IconThemeData(size: 18),
       dividerTheme: DividerThemeData(color: t.border, thickness: 1),
       appBarTheme: AppBarTheme(
-        backgroundColor: t.headerBg,
+        backgroundColor: t.headerBg.withValues(alpha: escuro ? 0.78 : 0.72),
         foregroundColor: t.text,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -110,21 +138,27 @@ class TemaIceiBank {
       ),
       cardTheme: CardThemeData(
         color: t.surface,
-        elevation: 0,
+        elevation: 3,
+        shadowColor: sombra,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: t.border),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: t.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        fillColor: t.surface.withValues(alpha: escuro ? 0.6 : 0.85),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 15,
+        ),
         labelStyle: TextStyle(color: t.textMuted, fontSize: 13),
         floatingLabelStyle: TextStyle(
-            color: Paleta.primary[escuro ? 400 : 600], fontSize: 12),
+          color: Paleta.primary[escuro ? 400 : 600],
+          fontSize: 12,
+        ),
         hintStyle: TextStyle(color: t.textMuted, fontSize: 13),
         errorStyle: const TextStyle(fontSize: 11),
         prefixIconColor: t.textMuted,
@@ -137,52 +171,168 @@ class TemaIceiBank {
         focusedErrorBorder: campo(esquema.error, 2),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: Paleta.primary[600],
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: Paleta.primary[600]!.withValues(alpha: 0.5),
-          disabledForegroundColor: Colors.white70,
-          minimumSize: const Size.fromHeight(48),
-          shape: retangulo8,
-          textStyle: _variavel(const TextStyle(
-              fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600)),
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size.fromHeight(52)),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          ),
+          shape: WidgetStatePropertyAll(botao),
+          textStyle: WidgetStatePropertyAll(estiloBotao),
+          iconSize: const WidgetStatePropertyAll(18),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (e) => e.contains(WidgetState.disabled)
+                ? Colors.white70
+                : Colors.white,
+          ),
+          // roxo da marca; ao pressionar, escurece um degrau
+          backgroundColor: WidgetStateProperty.resolveWith((e) {
+            if (e.contains(WidgetState.disabled)) {
+              return Paleta.primary[escuro ? 700 : 600]!.withValues(
+                alpha: 0.45,
+              );
+            }
+            if (e.contains(WidgetState.pressed)) return Paleta.primary[700];
+            if (e.contains(WidgetState.hovered)) return Paleta.primary[500];
+            return Paleta.primary[600];
+          }),
+          overlayColor: WidgetStatePropertyAll(
+            Colors.white.withValues(alpha: 0.12),
+          ),
+          // brilho roxo embaixo do botão (some quando desativado)
+          elevation: WidgetStateProperty.resolveWith(
+            (e) => e.contains(WidgetState.disabled)
+                ? 0
+                : e.contains(WidgetState.pressed)
+                ? 1
+                : 6,
+          ),
+          shadowColor: WidgetStatePropertyAll(
+            Paleta.primary[escuro ? 400 : 600]!.withValues(alpha: 0.55),
+          ),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          animationDuration: const Duration(milliseconds: 150),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: t.surfaceAlt,
-          foregroundColor: t.text,
-          side: BorderSide(color: t.border),
-          minimumSize: const Size.fromHeight(48),
-          shape: retangulo8,
-          textStyle: _variavel(const TextStyle(
-              fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600)),
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size.fromHeight(52)),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          ),
+          shape: WidgetStatePropertyAll(botao),
+          textStyle: WidgetStatePropertyAll(estiloBotao),
+          iconSize: const WidgetStatePropertyAll(18),
+          backgroundColor: WidgetStateProperty.resolveWith((e) {
+            if (e.contains(WidgetState.disabled)) {
+              return t.surface.withValues(alpha: 0.4);
+            }
+            if (e.contains(WidgetState.pressed)) {
+              return Paleta.primary[escuro ? 900 : 100]!.withValues(alpha: 0.9);
+            }
+            return t.surface.withValues(alpha: escuro ? 0.7 : 0.85);
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (e) => e.contains(WidgetState.disabled)
+                ? t.textMuted.withValues(alpha: 0.6)
+                : t.text,
+          ),
+          iconColor: WidgetStateProperty.resolveWith(
+            (e) => e.contains(WidgetState.disabled)
+                ? t.textMuted.withValues(alpha: 0.5)
+                : Paleta.primary[escuro ? 300 : 600],
+          ),
+          side: WidgetStateProperty.resolveWith(
+            (e) => BorderSide(
+              color:
+                  e.contains(WidgetState.pressed) ||
+                      e.contains(WidgetState.focused)
+                  ? Paleta.primary[400]!
+                  : t.border,
+              width: 1.2,
+            ),
+          ),
+          overlayColor: WidgetStatePropertyAll(
+            Paleta.primary[500]!.withValues(alpha: 0.08),
+          ),
+          elevation: WidgetStateProperty.resolveWith(
+            (e) => e.contains(WidgetState.disabled) ? 0 : 2,
+          ),
+          shadowColor: WidgetStatePropertyAll(sombra),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          animationDuration: const Duration(milliseconds: 150),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: t.textMuted,
-          shape: retangulo8,
+          foregroundColor: escuro ? Paleta.primary[300] : Paleta.primary[600],
+          shape: botao,
+          textStyle: estiloBotao,
         ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: t.textMuted,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: t.surface,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: t.border,
+        modalBackgroundColor: t.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: Paleta.primary[escuro ? 400 : 600],
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           shape: const WidgetStatePropertyAll(StadiumBorder()),
           side: WidgetStatePropertyAll(BorderSide(color: t.border)),
-          backgroundColor: WidgetStateProperty.resolveWith((estados) =>
-              estados.contains(WidgetState.selected) ? Paleta.primary[600] : t.surfaceAlt),
-          foregroundColor: WidgetStateProperty.resolveWith((estados) =>
-              estados.contains(WidgetState.selected) ? Colors.white : t.textMuted),
-          iconColor: WidgetStateProperty.resolveWith((estados) =>
-              estados.contains(WidgetState.selected) ? Colors.white : t.textMuted),
-          textStyle: WidgetStatePropertyAll(_variavel(const TextStyle(
-              fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600))),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? Paleta.primary[600]
+                : t.surfaceAlt,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? Colors.white
+                : t.textMuted,
+          ),
+          iconColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? Colors.white
+                : t.textMuted,
+          ),
+          textStyle: WidgetStatePropertyAll(
+            _variavel(
+              const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
         selectedIcon: const SizedBox.shrink(),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: retangulo8,
+        backgroundColor: escuro ? Paleta.primary[800] : Paleta.primary[950],
+        contentTextStyle: _variavel(
+          const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        shape: botao,
       ),
     );
   }
