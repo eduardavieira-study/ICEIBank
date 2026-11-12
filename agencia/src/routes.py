@@ -42,6 +42,7 @@ def bully_lider(request: Request):
 # Rotas de contas
 router.post("/auth/login")(contas_controller.login)
 router.post("/contas", status_code=201)(contas_controller.criar_conta)
+router.get("/contas")(contas_controller.listar_contas)
 router.get("/contas/{id}")(contas_controller.consultar_saldo)
 router.post("/contas/{id}/depositar")(contas_controller.depositar)
 router.post("/contas/{id}/sacar")(contas_controller.sacar)

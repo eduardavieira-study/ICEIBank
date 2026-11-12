@@ -25,7 +25,12 @@ class _ClienteFalso extends ApiClient {
 }
 
 const _sessao = Sessao(
-    token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena');
+  token: 't',
+  role: 'user',
+  agenciaId: 1,
+  idConta: 1,
+  nomeAluno: 'Helena',
+);
 
 void _comSessaoSalva() {
   SharedPreferences.setMockInitialValues({
@@ -52,8 +57,11 @@ void main() {
     });
 
     test('sem vetorAtual na resposta, fica vazio', () {
-      final conta =
-          Conta.deJson({'id': 1, 'nomeAluno': 'Helena', 'saldo': 100});
+      final conta = Conta.deJson({
+        'id': 1,
+        'nomeAluno': 'Helena',
+        'saldo': 100,
+      });
       expect(conta.vetorAtual, isEmpty);
     });
   });
@@ -65,7 +73,11 @@ void main() {
       await cache.salvar(
         1,
         const Conta(
-            id: 1, nomeAluno: 'Helena', saldo: 125.5, vetorAtual: [0, 4, 2]),
+          id: 1,
+          nomeAluno: 'Helena',
+          saldo: 125.5,
+          vetorAtual: [0, 4, 2],
+        ),
         agora: agora,
       );
 
@@ -80,9 +92,13 @@ void main() {
     test('contas de agências diferentes não se misturam', () async {
       final cache = CacheConta();
       await cache.salvar(
-          0, const Conta(id: 3, nomeAluno: 'A', saldo: 10, vetorAtual: [1, 0, 0]));
+        0,
+        const Conta(id: 3, nomeAluno: 'A', saldo: 10, vetorAtual: [1, 0, 0]),
+      );
       await cache.salvar(
-          1, const Conta(id: 3, nomeAluno: 'B', saldo: 20, vetorAtual: [0, 1, 0]));
+        1,
+        const Conta(id: 3, nomeAluno: 'B', saldo: 20, vetorAtual: [0, 1, 0]),
+      );
 
       expect((await cache.carregar(0, 3))!.conta.saldo, 10);
       expect((await cache.carregar(1, 3))!.conta.saldo, 20);
@@ -92,15 +108,18 @@ void main() {
       final cache = CacheConta();
       expect(await cache.carregar(1, 1), isNull);
 
-      SharedPreferences.setMockInitialValues(
-          {'ICEIBANK_CACHE_CONTA_1_1': 'isto não é json'});
+      SharedPreferences.setMockInitialValues({
+        'ICEIBANK_CACHE_CONTA_1_1': 'isto não é json',
+      });
       expect(await cache.carregar(1, 1), isNull);
     });
 
     test('limpar apaga o registro', () async {
       final cache = CacheConta();
       await cache.salvar(
-          1, const Conta(id: 1, nomeAluno: 'H', saldo: 1, vetorAtual: [0, 0, 0]));
+        1,
+        const Conta(id: 1, nomeAluno: 'H', saldo: 1, vetorAtual: [0, 0, 0]),
+      );
       await cache.limpar(1, 1);
       expect(await cache.carregar(1, 1), isNull);
     });
@@ -135,17 +154,25 @@ void main() {
       );
       await bom.consultarSaldo(_sessao);
 
-      final foraDoAr = ContasService(criarCliente: (_, _) => _ClienteFalso(null));
+      final foraDoAr = ContasService(
+        criarCliente: (_, _) => _ClienteFalso(null),
+      );
       await expectLater(
-          foraDoAr.consultarSaldo(_sessao), throwsA(isA<ApiException>()));
+        foraDoAr.consultarSaldo(_sessao),
+        throwsA(isA<ApiException>()),
+      );
 
       expect((await foraDoAr.saldoEmCache(_sessao))!.conta.saldo, 100);
     });
 
     test('limparCache apaga a cópia local', () async {
       final servico = ContasService(
-        criarCliente: (_, _) => _ClienteFalso(
-            {'id': 1, 'nomeAluno': 'Helena', 'saldo': 100, 'vetorAtual': [0, 0, 0]}),
+        criarCliente: (_, _) => _ClienteFalso({
+          'id': 1,
+          'nomeAluno': 'Helena',
+          'saldo': 100,
+          'vetorAtual': [0, 0, 0],
+        }),
       );
       await servico.consultarSaldo(_sessao);
       await servico.limparCache(_sessao);
@@ -155,8 +182,9 @@ void main() {
   });
 
   group('tela de saldo sem conexão', () {
-    testWidgets('mostra o último saldo conhecido com aviso de desatualizado',
-        (tester) async {
+    testWidgets('mostra o último saldo conhecido com aviso de desatualizado', (
+      tester,
+    ) async {
       _comSessaoSalva();
       final online = ContasService(
         criarCliente: (_, _) => _ClienteFalso({
@@ -170,9 +198,12 @@ void main() {
       await online.consultarSaldo(_sessao);
 
       // 2ª abertura, com a agência fora do ar
-      final foraDoAr = ContasService(criarCliente: (_, _) => _ClienteFalso(null));
-      await tester
-          .pumpWidget(IceiBankApp(auth: AuthService(), contas: foraDoAr));
+      final foraDoAr = ContasService(
+        criarCliente: (_, _) => _ClienteFalso(null),
+      );
+      await tester.pumpWidget(
+        IceiBankApp(auth: AuthService(), contas: foraDoAr),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('R\$ 300,00'), findsOneWidget);
@@ -180,12 +211,16 @@ void main() {
       expect(find.byKey(const Key('erro-saldo')), findsNothing);
     });
 
-    testWidgets('sem cache e sem conexão continua mostrando o erro',
-        (tester) async {
+    testWidgets('sem cache e sem conexão continua mostrando o erro', (
+      tester,
+    ) async {
       _comSessaoSalva();
-      final foraDoAr = ContasService(criarCliente: (_, _) => _ClienteFalso(null));
-      await tester
-          .pumpWidget(IceiBankApp(auth: AuthService(), contas: foraDoAr));
+      final foraDoAr = ContasService(
+        criarCliente: (_, _) => _ClienteFalso(null),
+      );
+      await tester.pumpWidget(
+        IceiBankApp(auth: AuthService(), contas: foraDoAr),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('erro-saldo')), findsOneWidget);

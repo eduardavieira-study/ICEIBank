@@ -19,16 +19,18 @@ class _ForaDoAr implements Exception {
 // As agências ausentes do mapa simulam "fora do ar".
 LiderancaService _servico(Map<int, int?> respostas, [List<int>? consultadas]) {
   return LiderancaService(
-    criarCliente: (a) => ApiClient(a.url,
-        client: MockClient((req) async {
-          consultadas?.add(a.id);
-          if (!respostas.containsKey(a.id)) throw const _ForaDoAr();
-          return http.Response(
-            jsonEncode({'idAgencia': a.id, 'liderAtual': respostas[a.id]}),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        })),
+    criarCliente: (a) => ApiClient(
+      a.url,
+      client: MockClient((req) async {
+        consultadas?.add(a.id);
+        if (!respostas.containsKey(a.id)) throw const _ForaDoAr();
+        return http.Response(
+          jsonEncode({'idAgencia': a.id, 'liderAtual': respostas[a.id]}),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    ),
   );
 }
 
@@ -44,7 +46,10 @@ class _ServicoFalso extends LiderancaService {
 
   @override
   Future<Lideranca> consultar() async {
-    final r = sequencia[chamadas < sequencia.length ? chamadas : sequencia.length - 1];
+    final r =
+        sequencia[chamadas < sequencia.length
+            ? chamadas
+            : sequencia.length - 1];
     chamadas++;
     if (r is Lideranca) return r;
     throw const ApiException('falha inesperada');
@@ -58,9 +63,13 @@ const _doisAtivos = Lideranca(lider: 1, ativas: {0: true, 1: true, 2: false});
 const _ninguem = Lideranca(lider: null, ativas: {0: false, 1: false, 2: false});
 
 Future<void> _montar(WidgetTester tester, _ServicoFalso servico) async {
-  await tester.pumpWidget(MaterialApp(
-    home: Scaffold(body: PainelLideranca(servico: servico, intervalo: _intervalo)),
-  ));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: PainelLideranca(servico: servico, intervalo: _intervalo),
+      ),
+    ),
+  );
   await tester.pump(); // primeira consulta
 }
 
@@ -88,12 +97,15 @@ void main() {
       expect(consultadas..sort(), [0, 1, 2]);
     });
 
-    test('uma agência fora do ar aparece como inativa e as outras seguem', () async {
-      final r = await _servico({0: 1, 1: 1}).consultar(); // a 2 caiu
+    test(
+      'uma agência fora do ar aparece como inativa e as outras seguem',
+      () async {
+        final r = await _servico({0: 1, 1: 1}).consultar(); // a 2 caiu
 
-      expect(r.ativas, {0: true, 1: true, 2: false});
-      expect(r.lider, 1);
-    });
+        expect(r.ativas, {0: true, 1: true, 2: false});
+        expect(r.lider, 1);
+      },
+    );
 
     test('mesmo com a agência 0 fora do ar, a líder vem das outras', () async {
       final r = await _servico({1: 2, 2: 2}).consultar();
@@ -132,11 +144,18 @@ void main() {
 
     test('resposta inválida de uma agência conta como inativa', () async {
       final servico = LiderancaService(
-        criarCliente: (a) => ApiClient(a.url,
-            client: MockClient((req) async => a.id == 1
+        criarCliente: (a) => ApiClient(
+          a.url,
+          client: MockClient(
+            (req) async => a.id == 1
                 ? http.Response('<html>erro</html>', 200)
-                : http.Response(jsonEncode({'liderAtual': 2}), 200,
-                    headers: {'content-type': 'application/json'}))),
+                : http.Response(
+                    jsonEncode({'liderAtual': 2}),
+                    200,
+                    headers: {'content-type': 'application/json'},
+                  ),
+          ),
+        ),
       );
 
       final r = await servico.consultar();
@@ -146,7 +165,9 @@ void main() {
   });
 
   group('PainelLideranca', () {
-    testWidgets('mostra a líder e as 3 agências com o status de cada uma', (tester) async {
+    testWidgets('mostra a líder e as 3 agências com o status de cada uma', (
+      tester,
+    ) async {
       await _montar(tester, _ServicoFalso([_doisAtivos]));
 
       expect(_lider(tester), 'Agência 1');
@@ -165,7 +186,9 @@ void main() {
       expect(find.byKey(const Key('coroa-1')), findsNothing);
     });
 
-    testWidgets('atualiza sozinho: a líder cai e a nova assume', (tester) async {
+    testWidgets('atualiza sozinho: a líder cai e a nova assume', (
+      tester,
+    ) async {
       final servico = _ServicoFalso([_normal, _normal, _doisAtivos]);
       await _montar(tester, servico);
       expect(_lider(tester), 'Agência 2');
@@ -182,7 +205,9 @@ void main() {
       expect(find.byKey(const Key('coroa-1')), findsOneWidget);
     });
 
-    testWidgets('eleição em andamento não conta como troca de líder', (tester) async {
+    testWidgets('eleição em andamento não conta como troca de líder', (
+      tester,
+    ) async {
       final servico = _ServicoFalso([
         _normal,
         const Lideranca(lider: null, ativas: _todasAtivas),
@@ -198,19 +223,23 @@ void main() {
       expect(find.byKey(const Key('lider-anterior')), findsNothing);
     });
 
-    testWidgets('nenhuma responde: mantém a última líder, avisa e marca todas fora do ar',
-        (tester) async {
-      await _montar(tester, _ServicoFalso([_normal, _ninguem]));
+    testWidgets(
+      'nenhuma responde: mantém a última líder, avisa e marca todas fora do ar',
+      (tester) async {
+        await _montar(tester, _ServicoFalso([_normal, _ninguem]));
 
-      await _passar(tester);
+        await _passar(tester);
 
-      expect(_lider(tester), 'Agência 2'); // última informação conhecida
-      expect(find.byKey(const Key('lider-sem-resposta')), findsOneWidget);
-      expect(find.text('Fora do ar'), findsNWidgets(3));
-      expect(find.text('Ativa'), findsNothing);
-    });
+        expect(_lider(tester), 'Agência 2'); // última informação conhecida
+        expect(find.byKey(const Key('lider-sem-resposta')), findsOneWidget);
+        expect(find.text('Fora do ar'), findsNWidgets(3));
+        expect(find.text('Ativa'), findsNothing);
+      },
+    );
 
-    testWidgets('sem resposta desde o início mostra o estado vazio', (tester) async {
+    testWidgets('sem resposta desde o início mostra o estado vazio', (
+      tester,
+    ) async {
       await _montar(tester, _ServicoFalso([_ninguem]));
 
       expect(_lider(tester), 'Sem resposta das agências');
@@ -218,7 +247,9 @@ void main() {
       expect(find.text('Fora do ar'), findsNWidgets(3));
     });
 
-    testWidgets('erro inesperado na consulta também não derruba o painel', (tester) async {
+    testWidgets('erro inesperado na consulta também não derruba o painel', (
+      tester,
+    ) async {
       await _montar(tester, _ServicoFalso([_normal, 'erro']));
 
       await _passar(tester);
@@ -228,7 +259,9 @@ void main() {
       expect(find.text('Ativa'), findsNothing); // nada confirmado
     });
 
-    testWidgets('volta ao normal quando as agências voltam a responder', (tester) async {
+    testWidgets('volta ao normal quando as agências voltam a responder', (
+      tester,
+    ) async {
       await _montar(tester, _ServicoFalso([_normal, _ninguem, _normal]));
       await _passar(tester);
       expect(find.byKey(const Key('lider-sem-resposta')), findsOneWidget);
@@ -239,7 +272,9 @@ void main() {
       expect(find.text('Ativa'), findsNWidgets(3));
     });
 
-    testWidgets('para de consultar quando o painel sai da tela', (tester) async {
+    testWidgets('para de consultar quando o painel sai da tela', (
+      tester,
+    ) async {
       final servico = _ServicoFalso([_normal]);
       await _montar(tester, servico);
       expect(servico.chamadas, 1);

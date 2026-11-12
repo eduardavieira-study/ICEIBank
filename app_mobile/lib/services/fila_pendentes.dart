@@ -26,7 +26,10 @@ class FilaPendentes {
   }
 
   Future<void> adicionar(
-      int agenciaId, int idConta, OperacaoPendente operacao) async {
+    int agenciaId,
+    int idConta,
+    OperacaoPendente operacao,
+  ) async {
     final fila = await listar(agenciaId, idConta);
     await _gravar(agenciaId, idConta, [...fila, operacao]);
   }
@@ -34,13 +37,21 @@ class FilaPendentes {
   Future<void> remover(int agenciaId, int idConta, String idOperacao) async {
     final fila = await listar(agenciaId, idConta);
     await _gravar(
-        agenciaId, idConta, fila.where((o) => o.id != idOperacao).toList());
+      agenciaId,
+      idConta,
+      fila.where((o) => o.id != idOperacao).toList(),
+    );
   }
 
   Future<void> _gravar(
-      int agenciaId, int idConta, List<OperacaoPendente> fila) async {
+    int agenciaId,
+    int idConta,
+    List<OperacaoPendente> fila,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        _chave(agenciaId, idConta), jsonEncode([for (final o in fila) o.toJson()]));
+      _chave(agenciaId, idConta),
+      jsonEncode([for (final o in fila) o.toJson()]),
+    );
   }
 }

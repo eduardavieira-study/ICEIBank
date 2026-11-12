@@ -9,7 +9,7 @@ abstract class MonitorConectividade {
 
 class MonitorConectividadeReal implements MonitorConectividade {
   @override
-  Stream<bool> get aoMudar => Connectivity()
-      .onConnectivityChanged
-      .map((r) => r.any((c) => c != ConnectivityResult.none));
+  Stream<bool> get aoMudar => Connectivity().onConnectivityChanged.map(
+    (r) => r.any((c) => c != ConnectivityResult.none),
+  );
 }

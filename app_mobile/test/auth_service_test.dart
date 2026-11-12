@@ -7,15 +7,25 @@ import 'package:app_mobile/config/agencias.dart';
 import 'package:app_mobile/services/api_client.dart';
 import 'package:app_mobile/services/auth_service.dart';
 
-AuthService _servico(int expira, List<Map<String, dynamic>> corpos) => AuthService(
+AuthService _servico(int expira, List<Map<String, dynamic>> corpos) =>
+    AuthService(
       expiraEmSegundos: expira,
-      criarCliente: (a) => ApiClient(a.url, client: MockClient((req) async {
-        corpos.add(jsonDecode(req.body) as Map<String, dynamic>);
-        return http.Response(
-            jsonEncode({'token': 't', 'role': 'user', 'idConta': 1, 'nomeAluno': 'Helena'}),
+      criarCliente: (a) => ApiClient(
+        a.url,
+        client: MockClient((req) async {
+          corpos.add(jsonDecode(req.body) as Map<String, dynamic>);
+          return http.Response(
+            jsonEncode({
+              'token': 't',
+              'role': 'user',
+              'idConta': 1,
+              'nomeAluno': 'Helena',
+            }),
             200,
-            headers: {'content-type': 'application/json'});
-      })),
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      ),
     );
 
 void main() {

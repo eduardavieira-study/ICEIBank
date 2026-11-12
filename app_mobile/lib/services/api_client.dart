@@ -54,15 +54,19 @@ class ApiClient {
 
   final Duration timeout;
 
-  ApiClient(this.baseUrl,
-      {this.token, http.Client? client, this.timeout = _timeoutPadrao})
-      : _http = client ?? http.Client();
+  ApiClient(
+    this.baseUrl, {
+    this.token,
+    http.Client? client,
+    this.timeout = _timeoutPadrao,
+  }) : _http = client ?? http.Client();
 
-  Future<Map<String, dynamic>> get(String caminho) =>
-      _enviar('GET', caminho);
+  Future<Map<String, dynamic>> get(String caminho) => _enviar('GET', caminho);
 
-  Future<Map<String, dynamic>> post(String caminho, [Map<String, dynamic>? corpo]) =>
-      _enviar('POST', caminho, corpo: corpo);
+  Future<Map<String, dynamic>> post(
+    String caminho, [
+    Map<String, dynamic>? corpo,
+  ]) => _enviar('POST', caminho, corpo: corpo);
 
   Future<Map<String, dynamic>> _enviar(
     String metodo,

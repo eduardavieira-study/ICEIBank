@@ -15,7 +15,12 @@ import 'package:app_mobile/services/conectividade.dart';
 import 'package:app_mobile/services/contas_service.dart';
 
 const _sessao = Sessao(
-    token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena');
+  token: 't',
+  role: 'user',
+  agenciaId: 1,
+  idConta: 1,
+  nomeAluno: 'Helena',
+);
 
 // Agência de mentira que imita o backend: só aceita a sincronização se o vetor
 // que o app conhecia for igual ao dela (senão, 409), e confere o saldo do saque.
@@ -31,8 +36,11 @@ class _Agencia {
     vetor = [...vetor]..[1] += 1;
   }
 
-  Map<String, dynamic> get _conta =>
-      {'id': 1, 'nomeAluno': 'Helena', 'saldo': saldo};
+  Map<String, dynamic> get _conta => {
+    'id': 1,
+    'nomeAluno': 'Helena',
+    'saldo': saldo,
+  };
 
   ApiClient cliente() => _Cliente(this);
 }
@@ -55,8 +63,10 @@ class _Cliente extends ApiClient {
   }
 
   @override
-  Future<Map<String, dynamic>> post(String caminho,
-      [Map<String, dynamic>? corpo]) async {
+  Future<Map<String, dynamic>> post(
+    String caminho, [
+    Map<String, dynamic>? corpo,
+  ]) async {
     _exigirOnline();
     if (caminho.endsWith('/depositar')) {
       a.saldo += (corpo!['valor'] as num).toDouble();
@@ -116,21 +126,27 @@ void _comSessaoSalva() {
 }
 
 // Lê o saldo (grava a cópia local com o vetor) e enfileira as operações.
-Future<void> _enfileirar(ContasService s,
-    [List<(TipoOperacao, double)> ops = const [(TipoOperacao.deposito, 25)]]) async {
+Future<void> _enfileirar(
+  ContasService s, [
+  List<(TipoOperacao, double)> ops = const [(TipoOperacao.deposito, 25)],
+]) async {
   await s.consultarSaldo(_sessao);
   for (final (tipo, valor) in ops) {
     await s.registrarPendente(_sessao, tipo, valor, saldoProvisorio: 1000);
   }
 }
 
-Future<void> _abrir(WidgetTester tester, ContasService contas,
-    {MonitorConectividade? monitor}) async {
+Future<void> _abrir(
+  WidgetTester tester,
+  ContasService contas, {
+  MonitorConectividade? monitor,
+}) async {
   tester.view.physicalSize = const Size(800, 2800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(IceiBankApp(
-      auth: AuthService(), contas: contas, conectividade: monitor));
+  await tester.pumpWidget(
+    IceiBankApp(auth: AuthService(), contas: contas, conectividade: monitor),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -161,61 +177,86 @@ void main() {
   tearDown(() => SimulacaoRede.semConexao.value = false);
 
   group('ApiClient', () {
-    test('expõe o corpo do 409 e entende a chave "erro" da agência em Node',
-        () async {
-      final cliente = ApiClient(
-        'http://x',
-        client: MockClient((_) async => http.Response(
-            jsonEncode({'erro': 'Conflito', 'vetorAtual': [1, 2]}), 409,
-            headers: {'content-type': 'application/json'})),
-      );
+    test(
+      'expõe o corpo do 409 e entende a chave "erro" da agência em Node',
+      () async {
+        final cliente = ApiClient(
+          'http://x',
+          client: MockClient(
+            (_) async => http.Response(
+              jsonEncode({
+                'erro': 'Conflito',
+                'vetorAtual': [1, 2],
+              }),
+              409,
+              headers: {'content-type': 'application/json'},
+            ),
+          ),
+        );
 
-      await expectLater(
-        cliente.post('/qualquer'),
-        throwsA(isA<ApiException>()
-            .having((e) => e.conflito, 'conflito', isTrue)
-            .having((e) => e.mensagem, 'mensagem', 'Conflito')
-            .having((e) => e.corpo!['vetorAtual'], 'vetorAtual', [1, 2])),
-      );
-    });
+        await expectLater(
+          cliente.post('/qualquer'),
+          throwsA(
+            isA<ApiException>()
+                .having((e) => e.conflito, 'conflito', isTrue)
+                .having((e) => e.mensagem, 'mensagem', 'Conflito')
+                .having((e) => e.corpo!['vetorAtual'], 'vetorAtual', [1, 2]),
+          ),
+        );
+      },
+    );
 
-    test('com a simulação ligada falha como sem conexão, sem chamar a rede',
-        () async {
-      var chamadas = 0;
-      final cliente = ApiClient('http://x', client: MockClient((_) async {
-        chamadas++;
-        return http.Response('{}', 200);
-      }));
-      SimulacaoRede.semConexao.value = true;
+    test(
+      'com a simulação ligada falha como sem conexão, sem chamar a rede',
+      () async {
+        var chamadas = 0;
+        final cliente = ApiClient(
+          'http://x',
+          client: MockClient((_) async {
+            chamadas++;
+            return http.Response('{}', 200);
+          }),
+        );
+        SimulacaoRede.semConexao.value = true;
 
-      await expectLater(cliente.get('/x'),
-          throwsA(isA<ApiException>().having((e) => e.indisponivel, 'indisponivel', isTrue)));
-      expect(chamadas, 0);
-    });
+        await expectLater(
+          cliente.get('/x'),
+          throwsA(
+            isA<ApiException>().having(
+              (e) => e.indisponivel,
+              'indisponivel',
+              isTrue,
+            ),
+          ),
+        );
+        expect(chamadas, 0);
+      },
+    );
   });
 
   group('sincronizarPendentes', () {
-    test('sucesso: envia com o vetor guardado, limpa a fila e atualiza a cópia',
-        () async {
-      final agencia = _Agencia();
-      final s = _servico(agencia);
-      await _enfileirar(s);
+    test(
+      'sucesso: envia com o vetor guardado, limpa a fila e atualiza a cópia',
+      () async {
+        final agencia = _Agencia();
+        final s = _servico(agencia);
+        await _enfileirar(s);
 
-      final r = await s.sincronizarPendentes(_sessao);
+        final r = await s.sincronizarPendentes(_sessao);
 
-      expect(r.sincronizadas, hasLength(1));
-      expect(r.conflito, isNull);
-      expect(agencia.pedidos.single['tipo'], 'DEPOSITO');
-      expect(agencia.pedidos.single['valor'], 25);
-      expect(agencia.pedidos.single['vetorConhecido'], [0, 1, 0]);
-      expect(await s.listarPendentes(_sessao), isEmpty);
-      final cache = (await s.saldoEmCache(_sessao))!.conta;
-      expect(cache.saldo, 125);
-      expect(cache.vetorAtual, [0, 2, 0]);
-    });
+        expect(r.sincronizadas, hasLength(1));
+        expect(r.conflito, isNull);
+        expect(agencia.pedidos.single['tipo'], 'DEPOSITO');
+        expect(agencia.pedidos.single['valor'], 25);
+        expect(agencia.pedidos.single['vetorConhecido'], [0, 1, 0]);
+        expect(await s.listarPendentes(_sessao), isEmpty);
+        final cache = (await s.saldoEmCache(_sessao))!.conta;
+        expect(cache.saldo, 125);
+        expect(cache.vetorAtual, [0, 2, 0]);
+      },
+    );
 
-    test('a segunda operação usa o vetor devolvido pela primeira (sem falso conflito)',
-        () async {
+    test('a segunda operação usa o vetor devolvido pela primeira (sem falso conflito)', () async {
       final agencia = _Agencia();
       final s = _servico(agencia);
       await _enfileirar(s, [
@@ -232,29 +273,34 @@ void main() {
       expect(agencia.saldo, 115);
     });
 
-    test('conflito: para, mantém a fila e guarda o saldo e o vetor reais',
-        () async {
-      final agencia = _Agencia();
-      final s = _servico(agencia);
-      await _enfileirar(s, [
-        (TipoOperacao.deposito, 25),
-        (TipoOperacao.saque, 10),
-      ]);
-      agencia.alterarPorFora(50); // saldo 150, vetor [0,2,0]
+    test(
+      'conflito: para, mantém a fila e guarda o saldo e o vetor reais',
+      () async {
+        final agencia = _Agencia();
+        final s = _servico(agencia);
+        await _enfileirar(s, [
+          (TipoOperacao.deposito, 25),
+          (TipoOperacao.saque, 10),
+        ]);
+        agencia.alterarPorFora(50); // saldo 150, vetor [0,2,0]
 
-      final r = await s.sincronizarPendentes(_sessao);
+        final r = await s.sincronizarPendentes(_sessao);
 
-      expect(r.sincronizadas, isEmpty);
-      expect(r.conflito, isNotNull);
-      expect(r.conflito!.operacao.tipo, TipoOperacao.deposito);
-      expect(r.conflito!.contaAtual.saldo, 150);
-      expect(r.conflito!.relacao, 'ANTES');
-      expect(agencia.pedidos, hasLength(1)); // não insiste nem segue para a próxima
-      expect(await s.listarPendentes(_sessao), hasLength(2)); // nada se perde
-      final cache = (await s.saldoEmCache(_sessao))!.conta;
-      expect(cache.saldo, 150);
-      expect(cache.vetorAtual, [0, 2, 0]);
-    });
+        expect(r.sincronizadas, isEmpty);
+        expect(r.conflito, isNotNull);
+        expect(r.conflito!.operacao.tipo, TipoOperacao.deposito);
+        expect(r.conflito!.contaAtual.saldo, 150);
+        expect(r.conflito!.relacao, 'ANTES');
+        expect(
+          agencia.pedidos,
+          hasLength(1),
+        ); // não insiste nem segue para a próxima
+        expect(await s.listarPendentes(_sessao), hasLength(2)); // nada se perde
+        final cache = (await s.saldoEmCache(_sessao))!.conta;
+        expect(cache.saldo, 150);
+        expect(cache.vetorAtual, [0, 2, 0]);
+      },
+    );
 
     test('depois do conflito, reenviar usa o vetor atual e passa', () async {
       final agencia = _Agencia();
@@ -272,22 +318,23 @@ void main() {
       expect(await s.listarPendentes(_sessao), isEmpty);
     });
 
-    test('sem conexão: a fila fica intacta e nada é marcado como enviado',
-        () async {
-      final agencia = _Agencia();
-      final s = _servico(agencia);
-      await _enfileirar(s);
-      agencia.online = false;
+    test(
+      'sem conexão: a fila fica intacta e nada é marcado como enviado',
+      () async {
+        final agencia = _Agencia();
+        final s = _servico(agencia);
+        await _enfileirar(s);
+        agencia.online = false;
 
-      final r = await s.sincronizarPendentes(_sessao);
+        final r = await s.sincronizarPendentes(_sessao);
 
-      expect(r.semConexao, isTrue);
-      expect(r.sincronizadas, isEmpty);
-      expect(await s.listarPendentes(_sessao), hasLength(1));
-    });
+        expect(r.semConexao, isTrue);
+        expect(r.sincronizadas, isEmpty);
+        expect(await s.listarPendentes(_sessao), hasLength(1));
+      },
+    );
 
-    test('operação que a agência recusa (saque sem saldo) sai da fila e é reportada',
-        () async {
+    test('operação que a agência recusa (saque sem saldo) sai da fila e é reportada', () async {
       final agencia = _Agencia();
       final s = _servico(agencia);
       await _enfileirar(s, [
@@ -305,11 +352,13 @@ void main() {
     });
 
     test('token expirado: avisa e mantém a fila', () async {
-      final s = ContasService(
-        criarCliente: (_, _) => _ClienteExpirado(),
+      final s = ContasService(criarCliente: (_, _) => _ClienteExpirado());
+      await s.registrarPendente(
+        _sessao,
+        TipoOperacao.deposito,
+        25,
+        saldoProvisorio: 100,
       );
-      await s.registrarPendente(_sessao, TipoOperacao.deposito, 25,
-          saldoProvisorio: 100);
 
       final r = await s.sincronizarPendentes(_sessao);
 
@@ -334,44 +383,49 @@ void main() {
   });
 
   group('tela: sincronização automática', () {
-    testWidgets('ao voltar, sincroniza sozinho: pendente some e o saldo vira real',
-        (tester) async {
-      final agencia = _Agencia();
-      await _abrir(tester, _servico(agencia));
-      agencia.online = false;
-      await _depositar(tester, '25');
-      expect(find.text('pendente'), findsOneWidget);
-      expect(find.text('R\$ 125,00'), findsOneWidget); // provisório
-      expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
+    testWidgets(
+      'ao voltar, sincroniza sozinho: pendente some e o saldo vira real',
+      (tester) async {
+        final agencia = _Agencia();
+        await _abrir(tester, _servico(agencia));
+        agencia.online = false;
+        await _depositar(tester, '25');
+        expect(find.text('pendente'), findsOneWidget);
+        expect(find.text('R\$ 125,00'), findsOneWidget); // provisório
+        expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
 
-      agencia.online = true; // a conexão volta; ninguém toca em nada
-      await _passarCiclo(tester);
+        agencia.online = true; // a conexão volta; ninguém toca em nada
+        await _passarCiclo(tester);
 
-      expect(find.byKey(const Key('lista-pendentes')), findsNothing);
-      expect(find.byKey(const Key('aviso-offline')), findsNothing);
-      expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
-      expect(find.text('Depósito de R\$ 25,00 confirmado.'), findsOneWidget);
-      expect(find.text('Saldo disponível'), findsOneWidget);
-      expect(find.text('R\$ 125,00'), findsOneWidget);
-      expect(agencia.saldo, 125);
-    });
+        expect(find.byKey(const Key('lista-pendentes')), findsNothing);
+        expect(find.byKey(const Key('aviso-offline')), findsNothing);
+        expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
+        expect(find.text('Depósito de R\$ 25,00 confirmado.'), findsOneWidget);
+        expect(find.text('Saldo disponível'), findsOneWidget);
+        expect(find.text('R\$ 125,00'), findsOneWidget);
+        expect(agencia.saldo, 125);
+      },
+    );
 
-    testWidgets('enquanto a agência segue fora do ar, nada é enviado nem perdido',
-        (tester) async {
-      final agencia = _Agencia();
-      await _abrir(tester, _servico(agencia));
-      agencia.online = false;
-      await _depositar(tester, '25');
+    testWidgets(
+      'enquanto a agência segue fora do ar, nada é enviado nem perdido',
+      (tester) async {
+        final agencia = _Agencia();
+        await _abrir(tester, _servico(agencia));
+        agencia.online = false;
+        await _depositar(tester, '25');
 
-      await _passarCiclo(tester);
-      await _passarCiclo(tester);
+        await _passarCiclo(tester);
+        await _passarCiclo(tester);
 
-      expect(find.text('pendente'), findsOneWidget);
-      expect(agencia.pedidos, isEmpty);
-    });
+        expect(find.text('pendente'), findsOneWidget);
+        expect(agencia.pedidos, isEmpty);
+      },
+    );
 
-    testWidgets('aviso de rede voltando dispara a sincronização na hora',
-        (tester) async {
+    testWidgets('aviso de rede voltando dispara a sincronização na hora', (
+      tester,
+    ) async {
       final agencia = _Agencia();
       final monitor = _MonitorFalso();
       await _abrir(tester, _servico(agencia), monitor: monitor);
@@ -386,26 +440,28 @@ void main() {
       expect(agencia.saldo, 125);
     });
 
-    testWidgets('a chave de teste simula a falta de conexão sem derrubar a agência',
-        (tester) async {
-      final agencia = _Agencia();
-      await _abrir(tester, _servico(agencia));
+    testWidgets(
+      'a chave de teste simula a falta de conexão sem derrubar a agência',
+      (tester) async {
+        final agencia = _Agencia();
+        await _abrir(tester, _servico(agencia));
 
-      await tester.tap(find.byKey(const Key('simular-offline')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('simular-offline')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
 
-      await _depositar(tester, '25');
-      expect(find.text('pendente'), findsOneWidget);
-      expect(agencia.pedidos, isEmpty);
+        await _depositar(tester, '25');
+        expect(find.text('pendente'), findsOneWidget);
+        expect(agencia.pedidos, isEmpty);
 
-      await tester.tap(find.byKey(const Key('simular-offline')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('simular-offline')));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
-      expect(find.byKey(const Key('aviso-offline')), findsNothing);
-      expect(agencia.saldo, 125);
-    });
+        expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
+        expect(find.byKey(const Key('aviso-offline')), findsNothing);
+        expect(agencia.saldo, 125);
+      },
+    );
   });
 
   group('tela: conflito (409)', () {
@@ -421,39 +477,50 @@ void main() {
       return agencia;
     }
 
-    testWidgets('mostra o conflito de forma visível, com o saldo real, e não segue sozinho',
-        (tester) async {
-      final agencia = await prepararConflito(tester);
+    testWidgets(
+      'mostra o conflito de forma visível, com o saldo real, e não segue sozinho',
+      (tester) async {
+        final agencia = await prepararConflito(tester);
 
-      expect(find.byKey(const Key('conflito-sync')), findsOneWidget);
-      expect(find.text('Conflito de sincronização'), findsOneWidget);
-      expect(find.text('Depósito de R\$ 25,00'), findsNWidgets(2)); // aviso + lista
-      expect(find.text('Saldo real na agência: R\$ 150,00'), findsOneWidget);
-      expect(find.text('R\$ 175,00'), findsOneWidget); // provisório sobre o real
-      expect(find.byKey(const Key('lista-pendentes')), findsOneWidget);
-      expect(agencia.pedidos, hasLength(1));
+        expect(find.byKey(const Key('conflito-sync')), findsOneWidget);
+        expect(find.text('Conflito de sincronização'), findsOneWidget);
+        expect(
+          find.text('Depósito de R\$ 25,00'),
+          findsNWidgets(2),
+        ); // aviso + lista
+        expect(find.text('Saldo real na agência: R\$ 150,00'), findsOneWidget);
+        expect(
+          find.text('R\$ 175,00'),
+          findsOneWidget,
+        ); // provisório sobre o real
+        expect(find.byKey(const Key('lista-pendentes')), findsOneWidget);
+        expect(agencia.pedidos, hasLength(1));
 
-      await _passarCiclo(tester); // ciclos seguintes não repetem nem apagam
-      expect(agencia.pedidos, hasLength(1));
-      expect(find.byKey(const Key('conflito-sync')), findsOneWidget);
-    });
+        await _passarCiclo(tester); // ciclos seguintes não repetem nem apagam
+        expect(agencia.pedidos, hasLength(1));
+        expect(find.byKey(const Key('conflito-sync')), findsOneWidget);
+      },
+    );
 
-    testWidgets('"Reenviar com o saldo atual" aplica a operação sobre o saldo real',
-        (tester) async {
-      final agencia = await prepararConflito(tester);
+    testWidgets(
+      '"Reenviar com o saldo atual" aplica a operação sobre o saldo real',
+      (tester) async {
+        final agencia = await prepararConflito(tester);
 
-      await tester.tap(find.byKey(const Key('reenviar-conflito')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('reenviar-conflito')));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('conflito-sync')), findsNothing);
-      expect(find.byKey(const Key('lista-pendentes')), findsNothing);
-      expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
-      expect(find.text('R\$ 175,00'), findsOneWidget);
-      expect(agencia.saldo, 175);
-    });
+        expect(find.byKey(const Key('conflito-sync')), findsNothing);
+        expect(find.byKey(const Key('lista-pendentes')), findsNothing);
+        expect(find.byKey(const Key('sync-concluida')), findsOneWidget);
+        expect(find.text('R\$ 175,00'), findsOneWidget);
+        expect(agencia.saldo, 175);
+      },
+    );
 
-    testWidgets('"Descartar" abandona a operação e mantém o saldo real',
-        (tester) async {
+    testWidgets('"Descartar" abandona a operação e mantém o saldo real', (
+      tester,
+    ) async {
       final agencia = await prepararConflito(tester);
 
       await tester.tap(find.byKey(const Key('descartar-conflito')));
@@ -465,35 +532,43 @@ void main() {
       expect(agencia.saldo, 150); // o depósito de 25 nunca chegou à agência
     });
 
-    testWidgets('com o conflito aberto, nova operação entra na fila (não fura) e transferir trava',
-        (tester) async {
-      final agencia = await prepararConflito(tester);
+    testWidgets(
+      'com o conflito aberto, nova operação entra na fila (não fura) e transferir trava',
+      (tester) async {
+        final agencia = await prepararConflito(tester);
 
-      await _depositar(tester, '10');
+        await _depositar(tester, '10');
 
-      expect(agencia.pedidos, hasLength(1)); // nada foi enviado fora de ordem
-      expect(find.text('pendente'), findsNWidgets(2));
-      expect(find.text('R\$ 185,00'), findsOneWidget);
-      final transferir = tester.widget<OutlinedButton>(
-          find.byKey(const Key('acao-transferir')));
-      expect(transferir.onPressed, isNull);
-    });
+        expect(agencia.pedidos, hasLength(1)); // nada foi enviado fora de ordem
+        expect(find.text('pendente'), findsNWidgets(2));
+        expect(find.text('R\$ 185,00'), findsOneWidget);
+        final transferir = tester.widget<OutlinedButton>(
+          find.byKey(const Key('acao-transferir')),
+        );
+        expect(transferir.onPressed, isNull);
+      },
+    );
 
-    testWidgets('saque que a agência não aceita vira aviso de erro e sai da fila',
-        (tester) async {
-      final agencia = _Agencia();
-      await _abrir(tester, _servico(agencia));
-      agencia.online = false;
-      await _sacar(tester, '90');
-      agencia.saldo = 50; // mudou por fora, sem mexer no vetor
-      agencia.online = true;
-      await _passarCiclo(tester);
+    testWidgets(
+      'saque que a agência não aceita vira aviso de erro e sai da fila',
+      (tester) async {
+        final agencia = _Agencia();
+        await _abrir(tester, _servico(agencia));
+        agencia.online = false;
+        await _sacar(tester, '90');
+        agencia.saldo = 50; // mudou por fora, sem mexer no vetor
+        agencia.online = true;
+        await _passarCiclo(tester);
 
-      expect(find.byKey(const Key('sync-rejeitadas')), findsOneWidget);
-      expect(find.text('Saque de R\$ 90,00: Saldo insuficiente.'), findsOneWidget);
-      expect(find.byKey(const Key('lista-pendentes')), findsNothing);
-      expect(find.text('R\$ 50,00'), findsOneWidget);
-    });
+        expect(find.byKey(const Key('sync-rejeitadas')), findsOneWidget);
+        expect(
+          find.text('Saque de R\$ 90,00: Saldo insuficiente.'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('lista-pendentes')), findsNothing);
+        expect(find.text('R\$ 50,00'), findsOneWidget);
+      },
+    );
   });
 }
 
@@ -501,7 +576,8 @@ class _ClienteExpirado extends ApiClient {
   _ClienteExpirado() : super('http://falso');
 
   @override
-  Future<Map<String, dynamic>> post(String caminho,
-          [Map<String, dynamic>? corpo]) async =>
-      throw const ApiException('Token expirado.', statusCode: 401);
+  Future<Map<String, dynamic>> post(
+    String caminho, [
+    Map<String, dynamic>? corpo,
+  ]) async => throw const ApiException('Token expirado.', statusCode: 401);
 }

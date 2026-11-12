@@ -102,7 +102,9 @@ class _MovimentacaoSheetState extends State<_MovimentacaoSheet> {
 
     return Padding(
       // sobe junto com o teclado
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Form(
@@ -124,7 +126,9 @@ class _MovimentacaoSheetState extends State<_MovimentacaoSheet> {
                 controller: _valorCtrl,
                 enabled: !_carregando,
                 autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onFieldSubmitted: (_) => _confirmar(),
                 decoration: const InputDecoration(hintText: 'Valor (R\$)'),
                 validator: (v) {
@@ -146,12 +150,19 @@ class _MovimentacaoSheetState extends State<_MovimentacaoSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(LucideIcons.triangleAlert,
-                          size: 16, color: tema.colorScheme.onErrorContainer),
+                      Icon(
+                        LucideIcons.triangleAlert,
+                        size: 16,
+                        color: tema.colorScheme.onErrorContainer,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(_erro!,
-                            style: TextStyle(color: tema.colorScheme.onErrorContainer)),
+                        child: Text(
+                          _erro!,
+                          style: TextStyle(
+                            color: tema.colorScheme.onErrorContainer,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -165,7 +176,8 @@ class _MovimentacaoSheetState extends State<_MovimentacaoSheet> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(tipo.acao),
               ),
             ],

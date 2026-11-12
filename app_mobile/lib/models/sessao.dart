@@ -19,14 +19,24 @@ class Sessao {
 
   bool get ehAdmin => role == 'admin';
 
+  // Mesma sessão apontando para outra agência. Só faz sentido para o admin: as
+  // agências assinam o JWT com a mesma chave, então o token dele vale em todas.
+  Sessao naAgencia(int novaAgenciaId) => Sessao(
+    token: token,
+    role: role,
+    agenciaId: novaAgenciaId,
+    idConta: idConta,
+    nomeAluno: nomeAluno,
+  );
+
   // Monta a sessão a partir da resposta de POST /auth/login.
   factory Sessao.deLogin(Map<String, dynamic> json, int agenciaId) => Sessao(
-        token: json['token'] as String,
-        role: json['role'] as String,
-        agenciaId: agenciaId,
-        idConta: json['idConta'] as int?,
-        nomeAluno: json['nomeAluno'] as String?,
-      );
+    token: json['token'] as String,
+    role: json['role'] as String,
+    agenciaId: agenciaId,
+    idConta: json['idConta'] as int?,
+    nomeAluno: json['nomeAluno'] as String?,
+  );
 }
 
 // Guarda a sessão no armazenamento local para o login sobreviver ao app ser

@@ -18,7 +18,10 @@ class _ContasFalso extends ContasService {
 
   @override
   Future<Conta> consultarSaldo(Sessao sessao) async {
-    final r = respostas[chamadas < respostas.length ? chamadas : respostas.length - 1];
+    final r =
+        respostas[chamadas < respostas.length
+            ? chamadas
+            : respostas.length - 1];
     chamadas++;
     if (r is ApiException) throw r;
     return r as Conta;
@@ -52,16 +55,23 @@ void main() {
 
   group('Conta.deJson', () {
     test('aceita saldo inteiro ou decimal', () {
-      expect(Conta.deJson({'id': 1, 'nomeAluno': 'H', 'saldo': 300}).saldo, 300.0);
-      expect(Conta.deJson({'id': 1, 'nomeAluno': 'H', 'saldo': 300.5}).saldo, 300.5);
+      expect(
+        Conta.deJson({'id': 1, 'nomeAluno': 'H', 'saldo': 300}).saldo,
+        300.0,
+      );
+      expect(
+        Conta.deJson({'id': 1, 'nomeAluno': 'H', 'saldo': 300.5}).saldo,
+        300.5,
+      );
     });
   });
 
   group('tela de saldo', () {
     testWidgets('mostra o saldo da conta formatado', (tester) async {
       _comSessaoSalva();
-      final contas = _ContasFalso(
-          [const Conta(id: 1, nomeAluno: 'Helena', saldo: 1300.0)]);
+      final contas = _ContasFalso([
+        const Conta(id: 1, nomeAluno: 'Helena', saldo: 1300.0),
+      ]);
       await tester.pumpWidget(IceiBankApp(auth: AuthService(), contas: contas));
       await tester.pumpAndSettle();
 
@@ -72,7 +82,9 @@ void main() {
       expect(contas.chamadas, 1);
     });
 
-    testWidgets('erro mostra a mensagem e "Tentar de novo" recarrega', (tester) async {
+    testWidgets('erro mostra a mensagem e "Tentar de novo" recarrega', (
+      tester,
+    ) async {
       _comSessaoSalva();
       final contas = _ContasFalso([
         const ApiException('Não foi possível conectar à agência.'),
@@ -95,8 +107,9 @@ void main() {
 
     testWidgets('token expirado (401) volta ao login', (tester) async {
       _comSessaoSalva();
-      final contas = _ContasFalso(
-          [const ApiException('Token expirado.', statusCode: 401)]);
+      final contas = _ContasFalso([
+        const ApiException('Token expirado.', statusCode: 401),
+      ]);
       await tester.pumpWidget(IceiBankApp(auth: AuthService(), contas: contas));
       await tester.pumpAndSettle();
 

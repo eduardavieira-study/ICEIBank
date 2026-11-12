@@ -18,16 +18,31 @@ class AuthService {
   // [expiraEmSegundos] (opcional) define a validade do token só neste login,
   // para testes. Sem ele vale o --dart-define=TOKEN_EXPIRA_EM, e sem ambos o
   // padrão do backend (30 minutos).
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
-          {int? expiraEmSegundos}) =>
-      _login(agencia, {'nomeAluno': nomeAluno.trim(), 'senha': senha}, expiraEmSegundos);
+  Future<Sessao> loginAluno(
+    Agencia agencia,
+    String nomeAluno,
+    String senha, {
+    int? expiraEmSegundos,
+  }) => _login(agencia, {
+    'nomeAluno': nomeAluno.trim(),
+    'senha': senha,
+  }, expiraEmSegundos);
 
-  Future<Sessao> loginAdmin(Agencia agencia, String usuario, String senha,
-          {int? expiraEmSegundos}) =>
-      _login(agencia, {'usuario': usuario.trim(), 'senha': senha}, expiraEmSegundos);
+  Future<Sessao> loginAdmin(
+    Agencia agencia,
+    String usuario,
+    String senha, {
+    int? expiraEmSegundos,
+  }) => _login(agencia, {
+    'usuario': usuario.trim(),
+    'senha': senha,
+  }, expiraEmSegundos);
 
   Future<Sessao> _login(
-      Agencia agencia, Map<String, dynamic> credenciais, int? validade) async {
+    Agencia agencia,
+    Map<String, dynamic> credenciais,
+    int? validade,
+  ) async {
     final api = _criarCliente(agencia);
     final segundos = validade ?? expiraEmSegundos;
     try {

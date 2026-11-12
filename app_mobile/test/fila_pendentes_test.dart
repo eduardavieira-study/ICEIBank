@@ -11,7 +11,12 @@ import 'package:app_mobile/services/contas_service.dart';
 import 'package:app_mobile/services/fila_pendentes.dart';
 
 const _sessao = Sessao(
-    token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena');
+  token: 't',
+  role: 'user',
+  agenciaId: 1,
+  idConta: 1,
+  nomeAluno: 'Helena',
+);
 
 // Agência fora do ar (lança "indisponível"), exceto quando [online] é true.
 class _ContasFalso extends ContasService {
@@ -22,15 +27,22 @@ class _ContasFalso extends ContasService {
 
   @override
   Future<Conta> consultarSaldo(Sessao sessao) async {
-    if (!online) throw const ApiException('Não foi possível conectar à agência.');
-    return Conta(id: 1, nomeAluno: 'Helena', saldo: saldo, vetorAtual: const [0, 1, 0]);
+    if (!online)
+      throw const ApiException('Não foi possível conectar à agência.');
+    return Conta(
+      id: 1,
+      nomeAluno: 'Helena',
+      saldo: saldo,
+      vetorAtual: const [0, 1, 0],
+    );
   }
 
   @override
   Future<Conta> depositar(Sessao sessao, double valor) async {
     chamadas.add('depositar:$valor');
     if (erroNaOperacao != null) throw erroNaOperacao!;
-    if (!online) throw const ApiException('Não foi possível conectar à agência.');
+    if (!online)
+      throw const ApiException('Não foi possível conectar à agência.');
     saldo += valor;
     return Conta(id: 1, nomeAluno: 'Helena', saldo: saldo);
   }
@@ -39,7 +51,8 @@ class _ContasFalso extends ContasService {
   Future<Conta> sacar(Sessao sessao, double valor) async {
     chamadas.add('sacar:$valor');
     if (erroNaOperacao != null) throw erroNaOperacao!;
-    if (!online) throw const ApiException('Não foi possível conectar à agência.');
+    if (!online)
+      throw const ApiException('Não foi possível conectar à agência.');
     saldo -= valor;
     return Conta(id: 1, nomeAluno: 'Helena', saldo: saldo);
   }
@@ -73,7 +86,7 @@ void _comCacheDe(double saldo) {
     'ICEIBANK_NOME_ALUNO': 'Helena',
     'ICEIBANK_CACHE_CONTA_1_1':
         '{"id":1,"nomeAluno":"Helena","saldo":$saldo,"vetorAtual":[0,1,0],'
-            '"atualizadoEm":"2026-11-08T14:32:00.000"}',
+        '"atualizadoEm":"2026-11-08T14:32:00.000"}',
   });
 }
 
@@ -122,8 +135,9 @@ void main() {
     });
 
     test('registro corrompido vira fila vazia', () async {
-      SharedPreferences.setMockInitialValues(
-          {'ICEIBANK_PENDENTES_1_1': 'isto não é json'});
+      SharedPreferences.setMockInitialValues({
+        'ICEIBANK_PENDENTES_1_1': 'isto não é json',
+      });
       expect(await FilaPendentes().listar(1, 1), isEmpty);
     });
 
@@ -139,48 +153,67 @@ void main() {
     test('guarda a operação com o vetor da última leitura', () async {
       final servico = ContasService();
       final fila = await servico.registrarPendente(
-          _sessao, TipoOperacao.deposito, 25,
-          saldoProvisorio: 100);
+        _sessao,
+        TipoOperacao.deposito,
+        25,
+        saldoProvisorio: 100,
+      );
 
       expect(fila, hasLength(1));
       expect(fila.single.vetorConhecido, [0, 1, 0]);
       expect(fila.single.valor, 25);
     });
 
-    test('saque maior que o saldo provisório é recusado e não entra na fila',
-        () async {
-      final servico = ContasService();
+    test(
+      'saque maior que o saldo provisório é recusado e não entra na fila',
+      () async {
+        final servico = ContasService();
 
-      await expectLater(
-        servico.registrarPendente(_sessao, TipoOperacao.saque, 150,
-            saldoProvisorio: 100),
-        throwsA(isA<ApiException>()
-            .having((e) => e.mensagem, 'mensagem', 'Saldo insuficiente.')),
-      );
-      expect(await servico.listarPendentes(_sessao), isEmpty);
-    });
+        await expectLater(
+          servico.registrarPendente(
+            _sessao,
+            TipoOperacao.saque,
+            150,
+            saldoProvisorio: 100,
+          ),
+          throwsA(
+            isA<ApiException>().having(
+              (e) => e.mensagem,
+              'mensagem',
+              'Saldo insuficiente.',
+            ),
+          ),
+        );
+        expect(await servico.listarPendentes(_sessao), isEmpty);
+      },
+    );
   });
 
   group('tela com a agência fora do ar', () {
     setUp(() => _comCacheDe(100));
 
-    testWidgets('depósito não dá erro: aparece como pendente e o saldo é provisório',
-        (tester) async {
-      final contas = _ContasFalso();
-      await _abrir(tester, contas);
-      expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
+    testWidgets(
+      'depósito não dá erro: aparece como pendente e o saldo é provisório',
+      (tester) async {
+        final contas = _ContasFalso();
+        await _abrir(tester, contas);
+        expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
 
-      await _operar(tester, 'depositar', '25');
+        await _operar(tester, 'depositar', '25');
 
-      expect(find.byKey(const Key('erro-movimentacao')), findsNothing);
-      expect(find.byKey(const Key('campo-valor')), findsNothing); // sheet fechou
-      expect(find.text('R\$ 125,00'), findsOneWidget); // saldo provisório
-      expect(find.text('Saldo provisório'), findsOneWidget);
-      expect(find.byKey(const Key('lista-pendentes')), findsOneWidget);
-      expect(find.text('Depósito de R\$ 25,00'), findsOneWidget);
-      expect(find.text('pendente'), findsOneWidget);
-      expect(await contas.listarPendentes(_sessao), hasLength(1));
-    });
+        expect(find.byKey(const Key('erro-movimentacao')), findsNothing);
+        expect(
+          find.byKey(const Key('campo-valor')),
+          findsNothing,
+        ); // sheet fechou
+        expect(find.text('R\$ 125,00'), findsOneWidget); // saldo provisório
+        expect(find.text('Saldo provisório'), findsOneWidget);
+        expect(find.byKey(const Key('lista-pendentes')), findsOneWidget);
+        expect(find.text('Depósito de R\$ 25,00'), findsOneWidget);
+        expect(find.text('pendente'), findsOneWidget);
+        expect(await contas.listarPendentes(_sessao), hasLength(1));
+      },
+    );
 
     testWidgets('saque offline desconta do saldo provisório', (tester) async {
       await _abrir(tester, _ContasFalso());
@@ -191,8 +224,9 @@ void main() {
       expect(find.text('Saque de R\$ 30,00'), findsOneWidget);
     });
 
-    testWidgets('várias operações offline acumulam no saldo provisório',
-        (tester) async {
+    testWidgets('várias operações offline acumulam no saldo provisório', (
+      tester,
+    ) async {
       await _abrir(tester, _ContasFalso());
 
       await _operar(tester, 'depositar', '25');
@@ -202,8 +236,9 @@ void main() {
       expect(find.text('pendente'), findsNWidgets(2));
     });
 
-    testWidgets('saque acima do saldo provisório mostra o erro no formulário',
-        (tester) async {
+    testWidgets('saque acima do saldo provisório mostra o erro no formulário', (
+      tester,
+    ) async {
       final contas = _ContasFalso();
       await _abrir(tester, contas);
 
@@ -219,7 +254,8 @@ void main() {
 
       await tester.ensureVisible(find.byKey(const Key('acao-transferir')));
       final botao = tester.widget<OutlinedButton>(
-          find.byKey(const Key('acao-transferir')));
+        find.byKey(const Key('acao-transferir')),
+      );
       expect(botao.onPressed, isNull);
     });
 
@@ -238,8 +274,9 @@ void main() {
   group('tela com a agência no ar', () {
     setUp(() => _comCacheDe(100));
 
-    testWidgets('operação normal continua direto na agência, sem fila',
-        (tester) async {
+    testWidgets('operação normal continua direto na agência, sem fila', (
+      tester,
+    ) async {
       final contas = _ContasFalso()..online = true;
       await _abrir(tester, contas);
 
@@ -251,32 +288,38 @@ void main() {
       expect(await contas.listarPendentes(_sessao), isEmpty);
     });
 
-    testWidgets('erro da agência (ex.: saldo insuficiente) não vai para a fila',
-        (tester) async {
-      final contas = _ContasFalso()
-        ..online = true
-        ..erroNaOperacao =
-            const ApiException('Saldo insuficiente.', statusCode: 400);
-      await _abrir(tester, contas);
+    testWidgets(
+      'erro da agência (ex.: saldo insuficiente) não vai para a fila',
+      (tester) async {
+        final contas = _ContasFalso()
+          ..online = true
+          ..erroNaOperacao = const ApiException(
+            'Saldo insuficiente.',
+            statusCode: 400,
+          );
+        await _abrir(tester, contas);
 
-      await _operar(tester, 'sacar', '500');
+        await _operar(tester, 'sacar', '500');
 
-      expect(find.text('Saldo insuficiente.'), findsOneWidget);
-      expect(await contas.listarPendentes(_sessao), isEmpty);
-    });
+        expect(find.text('Saldo insuficiente.'), findsOneWidget);
+        expect(await contas.listarPendentes(_sessao), isEmpty);
+      },
+    );
 
-    testWidgets('agência que cai depois de aberto o app: depósito vai para a fila',
-        (tester) async {
-      final contas = _ContasFalso()..online = true;
-      await _abrir(tester, contas);
-      expect(find.byKey(const Key('aviso-offline')), findsNothing);
+    testWidgets(
+      'agência que cai depois de aberto o app: depósito vai para a fila',
+      (tester) async {
+        final contas = _ContasFalso()..online = true;
+        await _abrir(tester, contas);
+        expect(find.byKey(const Key('aviso-offline')), findsNothing);
 
-      contas.online = false; // a agência cai com o app já aberto
-      await _operar(tester, 'depositar', '25');
+        contas.online = false; // a agência cai com o app já aberto
+        await _operar(tester, 'depositar', '25');
 
-      expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
-      expect(find.text('Depósito de R\$ 25,00'), findsOneWidget);
-      expect(find.text('R\$ 125,00'), findsOneWidget);
-    });
+        expect(find.byKey(const Key('aviso-offline')), findsOneWidget);
+        expect(find.text('Depósito de R\$ 25,00'), findsOneWidget);
+        expect(find.text('R\$ 125,00'), findsOneWidget);
+      },
+    );
   });
 }

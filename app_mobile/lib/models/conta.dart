@@ -17,13 +17,13 @@ class Conta {
   });
 
   factory Conta.deJson(Map<String, dynamic> json) => Conta(
-        id: json['id'] as int,
-        nomeAluno: json['nomeAluno'] as String,
-        // o JSON pode trazer 100 (int) ou 100.0 (double)
-        saldo: (json['saldo'] as num).toDouble(),
-        vetorAtual: [
-          for (final v in (json['vetorAtual'] as List<dynamic>? ?? const []))
-            (v as num).toInt(),
-        ],
-      );
+    id: json['id'] as int,
+    nomeAluno: json['nomeAluno'] as String,
+    // o JSON pode trazer 100 (int) ou 100.0 (double)
+    saldo: (json['saldo'] as num).toDouble(),
+    vetorAtual: [
+      for (final v in (json['vetorAtual'] as List<dynamic>? ?? const []))
+        (v as num).toInt(),
+    ],
+  );
 }

@@ -17,9 +17,9 @@ class ContasService {
     ApiClient Function(Agencia, String token)? criarCliente,
     CacheConta? cache,
     FilaPendentes? fila,
-  })  : _criarCliente = criarCliente ?? ((a, t) => ApiClient(a.url, token: t)),
-        _cache = cache ?? CacheConta(),
-        _fila = fila ?? FilaPendentes();
+  }) : _criarCliente = criarCliente ?? ((a, t) => ApiClient(a.url, token: t)),
+       _cache = cache ?? CacheConta(),
+       _fila = fila ?? FilaPendentes();
 
   // Saldo da conta da própria pessoa autenticada (GET /contas/{id}). Toda
   // leitura bem-sucedida atualiza a cópia local, usada quando não há conexão.
@@ -117,15 +117,17 @@ class ContasService {
         final e = ApiException.de(erro);
         if (e.naoAutorizado) {
           return ResultadoSincronizacao(
-              sincronizadas: sincronizadas,
-              rejeitadas: rejeitadas,
-              naoAutorizado: true);
+            sincronizadas: sincronizadas,
+            rejeitadas: rejeitadas,
+            naoAutorizado: true,
+          );
         }
         if (e.indisponivel) {
           return ResultadoSincronizacao(
-              sincronizadas: sincronizadas,
-              rejeitadas: rejeitadas,
-              semConexao: true);
+            sincronizadas: sincronizadas,
+            rejeitadas: rejeitadas,
+            semConexao: true,
+          );
         }
         final atual = e.corpo?['contaAtual'];
         if (e.conflito && atual is Map<String, dynamic>) {
@@ -138,7 +140,10 @@ class ContasService {
             sincronizadas: sincronizadas,
             rejeitadas: rejeitadas,
             conflito: ConflitoSincronizacao(
-                op, conta, e.corpo!['relacao'] as String?),
+              op,
+              conta,
+              e.corpo!['relacao'] as String?,
+            ),
           );
         }
         await _fila.remover(sessao.agenciaId, sessao.idConta!, op.id);
@@ -148,7 +153,9 @@ class ContasService {
       }
     }
     return ResultadoSincronizacao(
-        sincronizadas: sincronizadas, rejeitadas: rejeitadas);
+      sincronizadas: sincronizadas,
+      rejeitadas: rejeitadas,
+    );
   }
 
   // A pessoa escolheu não enviar uma operação pendente.
@@ -162,10 +169,16 @@ class ContasService {
   Future<Conta> sacar(Sessao sessao, double valor) =>
       _movimentar(sessao, 'sacar', valor);
 
-  Future<Conta> _movimentar(Sessao sessao, String operacao, double valor) async {
+  Future<Conta> _movimentar(
+    Sessao sessao,
+    String operacao,
+    double valor,
+  ) async {
     final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
     try {
-      final json = await api.post('/contas/${sessao.idConta}/$operacao', {'valor': valor});
+      final json = await api.post('/contas/${sessao.idConta}/$operacao', {
+        'valor': valor,
+      });
       return Conta.deJson(json);
     } finally {
       api.close();
@@ -187,7 +200,36 @@ class ContasService {
         'idDestino': idDestino,
         'valor': valor,
       });
-      return json['mensagem'] as String? ?? 'Transferência efetuada com sucesso!';
+      return json['mensagem'] as String? ??
+          'Transferência efetuada com sucesso!';
+    } finally {
+      api.close();
+    }
+  }
+
+  // Contas cadastradas na agência da sessão (GET /contas, só administrador),
+  // em ordem de número.
+  Future<List<Conta>> listarContas(Sessao sessao) async {
+    final api = _criarCliente(agencias[sessao.agenciaId], sessao.token);
+    try {
+      final Map<String, dynamic> json;
+      try {
+        json = await api.get('/contas');
+      } on ApiException catch (e) {
+        // 404/405: a agência em execução é de antes da rota existir
+        if (e.statusCode == 404 || e.statusCode == 405) {
+          throw ApiException(
+            'Esta agência não oferece a lista de contas. Reinicie o backend '
+            'com a versão mais recente.',
+            statusCode: e.statusCode,
+          );
+        }
+        rethrow;
+      }
+      return [
+        for (final c in (json['contas'] as List<dynamic>? ?? const []))
+          Conta.deJson(c as Map<String, dynamic>),
+      ];
     } finally {
       api.close();
     }

@@ -81,6 +81,14 @@ class _IceiBankAppState extends State<IceiBankApp> {
     });
   }
 
+  // O admin muda de agência sem sair: o mesmo token vale em todas elas.
+  Future<void> _aoTrocarAgencia(int agenciaId) async {
+    final sessao = _sessao?.naAgencia(agenciaId);
+    if (sessao == null) return;
+    await _storage.salvar(sessao);
+    setState(() => _sessao = sessao);
+  }
+
   // 401 da API: o token venceu ou é inválido. Volta ao login explicando o motivo.
   Future<void> _aoSessaoExpirada() async {
     await _storage.limpar();
@@ -89,6 +97,14 @@ class _IceiBankAppState extends State<IceiBankApp> {
       _aviso = 'Sua sessão expirou. Faça login novamente.';
     });
   }
+
+  // Muda quando troca de tela (login / aluno / admin) e anima a transição.
+  // Trocar de agência (admin) não muda a chave: a tela continua a mesma.
+  String get _chaveTela => !_carregado
+      ? 'carregando'
+      : _sessao == null
+      ? 'login'
+      : (_sessao!.ehAdmin ? 'admin' : 'aluno');
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +119,7 @@ class _IceiBankAppState extends State<IceiBankApp> {
         contas: _contas,
         aoSair: _aoSair,
         aoSessaoExpirada: _aoSessaoExpirada,
+        aoTrocarAgencia: _aoTrocarAgencia,
       );
     } else {
       tela = HomeScreen(
@@ -126,7 +143,22 @@ class _IceiBankAppState extends State<IceiBankApp> {
         themeAnimationDuration: const Duration(milliseconds: 250),
         // o fundo radial fica atrás de todas as telas e sheets
         builder: (context, child) => FundoIceiBank(child: child!),
-        home: tela,
+        home: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 380),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (filho, animacao) => FadeTransition(
+            opacity: animacao,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(animacao),
+              child: filho,
+            ),
+          ),
+          child: KeyedSubtree(key: ValueKey(_chaveTela), child: tela),
+        ),
       ),
     );
   }

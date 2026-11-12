@@ -18,8 +18,12 @@ class _AuthFalso extends AuthService {
   _AuthFalso({this.sessao, this.erro});
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
-      {int? expiraEmSegundos}) async {
+  Future<Sessao> loginAluno(
+    Agencia agencia,
+    String nomeAluno,
+    String senha, {
+    int? expiraEmSegundos,
+  }) async {
     agenciaUsada = agencia;
     nomeUsado = nomeAluno;
     if (erro != null) throw erro!;
@@ -29,8 +33,11 @@ class _AuthFalso extends AuthService {
 
 class _ContasFalso extends ContasService {
   @override
-  Future<Conta> consultarSaldo(Sessao sessao) async =>
-      Conta(id: sessao.idConta ?? 0, nomeAluno: sessao.nomeAluno ?? '', saldo: 100);
+  Future<Conta> consultarSaldo(Sessao sessao) async => Conta(
+    id: sessao.idConta ?? 0,
+    nomeAluno: sessao.nomeAluno ?? '',
+    saldo: 100,
+  );
 }
 
 Future<void> _preencher(WidgetTester tester, String nome, String senha) async {
@@ -42,14 +49,18 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('sem sessão salva, abre na tela de login', (tester) async {
-    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
+    await tester.pumpWidget(
+      IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.byKey(const Key('campo-nome')), findsOneWidget);
   });
 
-  testWidgets('campos vazios mostram validação e não chamam a API', (tester) async {
+  testWidgets('campos vazios mostram validação e não chamam a API', (
+    tester,
+  ) async {
     final auth = _AuthFalso();
     await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
@@ -62,10 +73,17 @@ void main() {
     expect(auth.nomeUsado, isNull);
   });
 
-  testWidgets('login válido na agência escolhida abre a tela inicial', (tester) async {
+  testWidgets('login válido na agência escolhida abre a tela inicial', (
+    tester,
+  ) async {
     final auth = _AuthFalso(
       sessao: const Sessao(
-          token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena'),
+        token: 't',
+        role: 'user',
+        agenciaId: 1,
+        idConta: 1,
+        nomeAluno: 'Helena',
+      ),
     );
     await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
@@ -80,9 +98,14 @@ void main() {
     expect(find.text('Conta 1 · Agência 1'), findsOneWidget);
   });
 
-  testWidgets('credenciais inválidas mostram o erro da agência', (tester) async {
+  testWidgets('credenciais inválidas mostram o erro da agência', (
+    tester,
+  ) async {
     final auth = _AuthFalso(
-      erro: const ApiException('Nome ou senha inválidos na Agência 0.', statusCode: 401),
+      erro: const ApiException(
+        'Nome ou senha inválidos na Agência 0.',
+        statusCode: 401,
+      ),
     );
     await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
@@ -96,7 +119,9 @@ void main() {
     expect(find.text('Entrar'), findsOneWidget);
   });
 
-  testWidgets('sessão salva é restaurada e sair volta ao login', (tester) async {
+  testWidgets('sessão salva é restaurada e sair volta ao login', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'ICEIBANK_TOKEN': 't',
       'ICEIBANK_ROLE': 'user',
@@ -104,7 +129,9 @@ void main() {
       'ICEIBANK_ID_CONTA': 0,
       'ICEIBANK_NOME_ALUNO': 'Ana',
     });
-    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
+    await tester.pumpWidget(
+      IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Olá, Ana'), findsOneWidget);

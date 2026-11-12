@@ -13,12 +13,12 @@ class Granulado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Positioned.fill(
-        child: IgnorePointer(
-          child: RepaintBoundary(
-            child: CustomPaint(painter: _PintorGranulado(opacidade)),
-          ),
-        ),
-      );
+    child: IgnorePointer(
+      child: RepaintBoundary(
+        child: CustomPaint(painter: _PintorGranulado(opacidade)),
+      ),
+    ),
+  );
 }
 
 class _PintorGranulado extends CustomPainter {
@@ -34,7 +34,10 @@ class _PintorGranulado extends CustomPainter {
     final claro = <Offset>[];
     final escuro = <Offset>[];
     for (var i = 0; i < quantidade; i++) {
-      final ponto = Offset(rnd.nextDouble() * size.width, rnd.nextDouble() * size.height);
+      final ponto = Offset(
+        rnd.nextDouble() * size.width,
+        rnd.nextDouble() * size.height,
+      );
       (rnd.nextBool() ? claro : escuro).add(ponto);
     }
     Paint tinta(Color c) => Paint()

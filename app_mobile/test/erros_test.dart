@@ -24,12 +24,15 @@ class _ContasFalso extends ContasService {
   }
 
   @override
-  Future<Conta> depositar(Sessao sessao, double valor) async => throw erroOperacao!;
+  Future<Conta> depositar(Sessao sessao, double valor) async =>
+      throw erroOperacao!;
 
   @override
-  Future<String> transferir(Sessao sessao,
-          {required int idDestino, required double valor}) async =>
-      throw erroOperacao!;
+  Future<String> transferir(
+    Sessao sessao, {
+    required int idDestino,
+    required double valor,
+  }) async => throw erroOperacao!;
 
   @override
   Future<Map<String, dynamic>> criarConta(
@@ -38,17 +41,19 @@ class _ContasFalso extends ContasService {
     required String nomeAluno,
     required String senha,
     required double saldoInicial,
-  }) async =>
-      throw erroCriar!;
+  }) async => throw erroCriar!;
 }
 
 class _AuthFalso extends AuthService {
   Object? erro;
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
-          {int? expiraEmSegundos}) async =>
-      throw erro!;
+  Future<Sessao> loginAluno(
+    Agencia agencia,
+    String nomeAluno,
+    String senha, {
+    int? expiraEmSegundos,
+  }) async => throw erro!;
 }
 
 void _comSessao({bool admin = false}) {
@@ -61,8 +66,14 @@ void _comSessao({bool admin = false}) {
   });
 }
 
-Future<void> _iniciar(WidgetTester tester, _ContasFalso contas, [AuthService? auth]) async {
-  await tester.pumpWidget(IceiBankApp(auth: auth ?? AuthService(), contas: contas));
+Future<void> _iniciar(
+  WidgetTester tester,
+  _ContasFalso contas, [
+  AuthService? auth,
+]) async {
+  await tester.pumpWidget(
+    IceiBankApp(auth: auth ?? AuthService(), contas: contas),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -74,8 +85,13 @@ void main() {
       const original = ApiException('Saldo insuficiente.', statusCode: 400);
       expect(ApiException.de(original), same(original));
 
-      final generica = ApiException.de(const FormatException('<html>boom</html>'));
-      expect(generica.mensagem, 'Algo deu errado. Tente novamente em instantes.');
+      final generica = ApiException.de(
+        const FormatException('<html>boom</html>'),
+      );
+      expect(
+        generica.mensagem,
+        'Algo deu errado. Tente novamente em instantes.',
+      );
       expect(generica.mensagem, isNot(contains('boom')));
     });
   });
@@ -122,7 +138,10 @@ void main() {
       await _iniciar(tester, _ContasFalso()..erroCriar = _expirado);
 
       await tester.enterText(find.byKey(const Key('campo-id')), '4');
-      await tester.enterText(find.byKey(const Key('campo-nome-conta')), 'Lucas');
+      await tester.enterText(
+        find.byKey(const Key('campo-nome-conta')),
+        'Lucas',
+      );
       await tester.enterText(find.byKey(const Key('campo-senha-conta')), 'x');
       await tester.tap(find.text('Criar conta').last);
       await tester.pumpAndSettle();
@@ -131,7 +150,9 @@ void main() {
     });
   });
 
-  testWidgets('sair voluntariamente não mostra o aviso de sessão expirada', (tester) async {
+  testWidgets('sair voluntariamente não mostra o aviso de sessão expirada', (
+    tester,
+  ) async {
     _comSessao();
     await _iniciar(tester, _ContasFalso());
 
@@ -145,16 +166,25 @@ void main() {
   group('erro inesperado (não é da API) não quebra o app', () {
     testWidgets('no saldo: mensagem genérica e nova tentativa', (tester) async {
       _comSessao();
-      await _iniciar(tester, _ContasFalso()..erroSaldo = const FormatException('resposta ruim'));
+      await _iniciar(
+        tester,
+        _ContasFalso()..erroSaldo = const FormatException('resposta ruim'),
+      );
 
-      expect(find.text('Algo deu errado. Tente novamente em instantes.'), findsOneWidget);
+      expect(
+        find.text('Algo deu errado. Tente novamente em instantes.'),
+        findsOneWidget,
+      );
       expect(find.text('resposta ruim'), findsNothing);
       expect(find.text('Tentar de novo'), findsOneWidget);
     });
 
     testWidgets('na operação: aparece dentro do formulário', (tester) async {
       _comSessao();
-      await _iniciar(tester, _ContasFalso()..erroOperacao = StateError('falha interna'));
+      await _iniciar(
+        tester,
+        _ContasFalso()..erroOperacao = StateError('falha interna'),
+      );
 
       await tester.tap(find.byKey(const Key('acao-depositar')));
       await tester.pumpAndSettle();
@@ -163,7 +193,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('erro-movimentacao')), findsOneWidget);
-      expect(find.text('Algo deu errado. Tente novamente em instantes.'), findsOneWidget);
+      expect(
+        find.text('Algo deu errado. Tente novamente em instantes.'),
+        findsOneWidget,
+      );
       expect(find.text('falha interna'), findsNothing);
     });
 
@@ -178,7 +211,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('mensagem-erro')), findsOneWidget);
-      expect(find.text('Algo deu errado. Tente novamente em instantes.'), findsOneWidget);
+      expect(
+        find.text('Algo deu errado. Tente novamente em instantes.'),
+        findsOneWidget,
+      );
     });
   });
 }

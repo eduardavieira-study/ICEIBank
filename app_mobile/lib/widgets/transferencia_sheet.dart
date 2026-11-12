@@ -110,7 +110,9 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
 
     return Padding(
       // sobe junto com o teclado
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Form(
@@ -121,10 +123,16 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
             children: [
               Row(
                 children: [
-                  Icon(LucideIcons.arrowRightLeft,
-                      size: 16, color: Paleta.primary[escuro ? 300 : 600]),
+                  Icon(
+                    LucideIcons.arrowRightLeft,
+                    size: 16,
+                    color: Paleta.primary[escuro ? 300 : 600],
+                  ),
                   const SizedBox(width: 8),
-                  Text('Realizar transferência', style: tema.textTheme.titleMedium),
+                  Text(
+                    'Realizar transferência',
+                    style: tema.textTheme.titleMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -136,7 +144,9 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(hintText: 'ID da conta de destino (ex: 1)'),
+                decoration: const InputDecoration(
+                  hintText: 'ID da conta de destino (ex: 1)',
+                ),
                 validator: (v) {
                   final destino = _lerDestino(v);
                   if (destino == null) {
@@ -159,7 +169,9 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
                 key: const Key('campo-valor'),
                 controller: _valorCtrl,
                 enabled: !_carregando,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onFieldSubmitted: (_) => _confirmar(),
                 decoration: const InputDecoration(hintText: 'Valor (R\$)'),
                 validator: (v) {
@@ -181,12 +193,19 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(LucideIcons.triangleAlert,
-                          size: 16, color: tema.colorScheme.onErrorContainer),
+                      Icon(
+                        LucideIcons.triangleAlert,
+                        size: 16,
+                        color: tema.colorScheme.onErrorContainer,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(_erro!,
-                            style: TextStyle(color: tema.colorScheme.onErrorContainer)),
+                        child: Text(
+                          _erro!,
+                          style: TextStyle(
+                            color: tema.colorScheme.onErrorContainer,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -200,7 +219,8 @@ class _TransferenciaSheetState extends State<_TransferenciaSheet> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text('Enviar dinheiro'),
               ),
             ],

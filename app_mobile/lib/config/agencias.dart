@@ -25,9 +25,9 @@ class Agencia {
 }
 
 List<Agencia> get agencias => List.generate(
-      numeroAgencias,
-      (i) => Agencia(i, 'http://$hostBackend:${portaBase + i}'),
-    );
+  numeroAgencias,
+  (i) => Agencia(i, 'http://$hostBackend:${portaBase + i}'),
+);
 
 // Mesma regra do backend: a conta pertence à agência id % 3.
 Agencia agenciaResponsavel(int idConta) => agencias[idConta % numeroAgencias];

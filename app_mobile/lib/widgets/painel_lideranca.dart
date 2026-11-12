@@ -124,8 +124,11 @@ class _PainelLiderancaState extends State<PainelLideranca> {
                     color: Paleta.secondary[500]!.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(LucideIcons.crown,
-                      size: 16, color: Paleta.secondary[500]),
+                  child: Icon(
+                    LucideIcons.crown,
+                    size: 16,
+                    color: Paleta.secondary[500],
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -134,19 +137,25 @@ class _PainelLiderancaState extends State<PainelLideranca> {
                     children: [
                       Text('Líder atual', style: tema.textTheme.bodySmall),
                       const SizedBox(height: 2),
-                      Text(titulo,
-                          key: const Key('lider-atual'),
-                          style: tema.textTheme.titleMedium),
+                      Text(
+                        titulo,
+                        key: const Key('lider-atual'),
+                        style: tema.textTheme.titleMedium,
+                      ),
                       if (_atualizadoEm != null) ...[
                         const SizedBox(height: 2),
-                        Text('Atualizado às ${_hora(_atualizadoEm!)}',
-                            style: tema.textTheme.bodySmall),
+                        Text(
+                          'Atualizado às ${_hora(_atualizadoEm!)}',
+                          style: tema.textTheme.bodySmall,
+                        ),
                       ],
                       if (_anterior != null) ...[
                         const SizedBox(height: 2),
-                        Text('Antes: Agência $_anterior',
-                            key: const Key('lider-anterior'),
-                            style: tema.textTheme.bodySmall),
+                        Text(
+                          'Antes: Agência $_anterior',
+                          key: const Key('lider-anterior'),
+                          style: tema.textTheme.bodySmall,
+                        ),
                       ],
                     ],
                   ),
@@ -192,7 +201,9 @@ class _PainelLiderancaState extends State<PainelLideranca> {
                         id: id,
                         // com a consulta falhando, nada é confirmado como ativo
                         ativa: !_falhou && (atual.ativas[id] ?? false),
-                        lider: id == (semResposta ? _ultimaLiderConhecida : atual.lider),
+                        lider:
+                            id ==
+                            (semResposta ? _ultimaLiderConhecida : atual.lider),
                       ),
                     ),
                   ],
@@ -212,7 +223,11 @@ class _ChipAgencia extends StatelessWidget {
   final bool ativa;
   final bool lider;
 
-  const _ChipAgencia({required this.id, required this.ativa, required this.lider});
+  const _ChipAgencia({
+    required this.id,
+    required this.ativa,
+    required this.lider,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +244,9 @@ class _ChipAgencia extends StatelessWidget {
         color: tema.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: lider ? Paleta.primary[escuro ? 400 : 600]! : tema.colorScheme.outline,
+          color: lider
+              ? Paleta.primary[escuro ? 400 : 600]!
+              : tema.colorScheme.outline,
           width: lider ? 1.5 : 1,
         ),
       ),
@@ -247,8 +264,12 @@ class _ChipAgencia extends StatelessWidget {
                 ),
               ),
               if (lider)
-                Icon(LucideIcons.crown,
-                    key: Key('coroa-$id'), size: 12, color: Paleta.secondary[500]),
+                Icon(
+                  LucideIcons.crown,
+                  key: Key('coroa-$id'),
+                  size: 12,
+                  color: Paleta.secondary[500],
+                ),
             ],
           ),
           const SizedBox(height: 6),
@@ -257,7 +278,10 @@ class _ChipAgencia extends StatelessWidget {
               Container(
                 width: 7,
                 height: 7,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: corStatus),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: corStatus,
+                ),
               ),
               const SizedBox(width: 6),
               // Flexible + reticências: se a fonte do sistema for grande, o

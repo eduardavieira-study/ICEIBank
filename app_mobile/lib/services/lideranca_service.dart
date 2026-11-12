@@ -14,8 +14,8 @@ class LiderancaService {
   final ApiClient Function(Agencia) _criarCliente;
 
   LiderancaService({ApiClient Function(Agencia)? criarCliente})
-      : _criarCliente = criarCliente ??
-            ((a) => ApiClient(a.url, timeout: _timeoutConsulta));
+    : _criarCliente =
+          criarCliente ?? ((a) => ApiClient(a.url, timeout: _timeoutConsulta));
 
   Future<Lideranca> consultar() async {
     final respostas = await Future.wait(agencias.map(_consultarUma));
@@ -29,7 +29,9 @@ class LiderancaService {
     );
   }
 
-  Future<({int id, bool ativa, int? lider})> _consultarUma(Agencia agencia) async {
+  Future<({int id, bool ativa, int? lider})> _consultarUma(
+    Agencia agencia,
+  ) async {
     final api = _criarCliente(agencia);
     try {
       final json = await api.get('/bully/lider');
@@ -54,11 +56,9 @@ class LiderancaService {
     for (final id in citadas) {
       votos[id] = (votos[id] ?? 0) + 1;
     }
-    return votos.entries
-        .reduce((a, b) {
-          if (a.value != b.value) return a.value > b.value ? a : b;
-          return a.key > b.key ? a : b;
-        })
-        .key;
+    return votos.entries.reduce((a, b) {
+      if (a.value != b.value) return a.value > b.value ? a : b;
+      return a.key > b.key ? a : b;
+    }).key;
   }
 }

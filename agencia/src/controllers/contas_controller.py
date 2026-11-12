@@ -168,6 +168,18 @@ def criar_conta(
     return conta
 
 
+def listar_contas(request: Request, payload: dict = Depends(validar_token)):
+    # Autorização: apenas administradores listam as contas da agência
+    if payload.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem listar as contas da agência.",
+        )
+    # Nunca devolve as senhas (ficam em app.state.senhas, separadas das contas)
+    contas = sorted(request.app.state.contas.values(), key=lambda c: c["id"])
+    return {"contas": contas}
+
+
 def consultar_saldo(request: Request, id: int, payload: dict = Depends(validar_token)):
     # Autorização: O próprio dono ou admin podem ver o saldo
     if not verificar_autorizacao(payload, id):

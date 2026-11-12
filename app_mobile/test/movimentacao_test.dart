@@ -88,13 +88,18 @@ void main() {
 
     for (final entrada in ['', '0', 'abc', '-5']) {
       await _digitarEConfirmar(tester, entrada);
-      expect(find.text('Informe um valor de depósito maior que zero.'), findsOneWidget,
-          reason: 'entrada "$entrada"');
+      expect(
+        find.text('Informe um valor de depósito maior que zero.'),
+        findsOneWidget,
+        reason: 'entrada "$entrada"',
+      );
     }
     expect(contas.chamadas, isEmpty);
   });
 
-  testWidgets('saldo insuficiente aparece no formulário e o saldo não muda', (tester) async {
+  testWidgets('saldo insuficiente aparece no formulário e o saldo não muda', (
+    tester,
+  ) async {
     final contas = _ContasFalso()
       ..erro = const ApiException('Saldo insuficiente.', statusCode: 400);
     await _abrir(tester, contas);
@@ -105,11 +110,16 @@ void main() {
 
     expect(find.byKey(const Key('erro-movimentacao')), findsOneWidget);
     expect(find.text('Saldo insuficiente.'), findsOneWidget);
-    expect(find.byKey(const Key('campo-valor')), findsOneWidget); // continua aberto
+    expect(
+      find.byKey(const Key('campo-valor')),
+      findsOneWidget,
+    ); // continua aberto
     expect(find.text('R\$ 300,00'), findsOneWidget);
   });
 
-  testWidgets('token expirado (401) fecha o formulário e volta ao login', (tester) async {
+  testWidgets('token expirado (401) fecha o formulário e volta ao login', (
+    tester,
+  ) async {
     final contas = _ContasFalso()
       ..erro = const ApiException('Token expirado.', statusCode: 401);
     await _abrir(tester, contas);

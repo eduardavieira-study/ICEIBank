@@ -14,11 +14,11 @@ class LogoIceiBank extends StatelessWidget {
   Widget build(BuildContext context) {
     final escuro = Theme.of(context).brightness == Brightness.dark;
     final estilo = Theme.of(context).textTheme.titleLarge!.copyWith(
-          fontSize: tamanho,
-          fontWeight: FontWeight.w800,
-          fontVariations: const [FontVariation('wght', 800)],
-          letterSpacing: -0.5,
-        );
+      fontSize: tamanho,
+      fontWeight: FontWeight.w800,
+      fontVariations: const [FontVariation('wght', 800)],
+      letterSpacing: -0.5,
+    );
     return Text.rich(
       TextSpan(
         text: 'ICEI',
@@ -49,7 +49,11 @@ class IconeMarca extends StatelessWidget {
         gradient: Paleta.gradienteMarca,
         borderRadius: BorderRadius.circular(tamanho * 0.25),
       ),
-      child: Icon(LucideIcons.landmark, color: Colors.white, size: tamanho * 0.4),
+      child: Icon(
+        LucideIcons.landmark,
+        color: Colors.white,
+        size: tamanho * 0.4,
+      ),
     );
   }
 }

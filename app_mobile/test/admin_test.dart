@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_mobile/config/agencias.dart';
 import 'package:app_mobile/main.dart';
+import 'package:app_mobile/models/conta.dart';
 import 'package:app_mobile/models/sessao.dart';
 import 'package:app_mobile/services/api_client.dart';
 import 'package:app_mobile/services/auth_service.dart';
@@ -14,16 +15,24 @@ class _AuthFalso extends AuthService {
   bool chamouAluno = false;
 
   @override
-  Future<Sessao> loginAdmin(Agencia agencia, String usuario, String senha,
-      {int? expiraEmSegundos}) async {
+  Future<Sessao> loginAdmin(
+    Agencia agencia,
+    String usuario,
+    String senha, {
+    int? expiraEmSegundos,
+  }) async {
     agenciaUsada = agencia;
     usuarioUsado = usuario;
     return Sessao(token: 'adm', role: 'admin', agenciaId: agencia.id);
   }
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
-      {int? expiraEmSegundos}) async {
+  Future<Sessao> loginAluno(
+    Agencia agencia,
+    String nomeAluno,
+    String senha, {
+    int? expiraEmSegundos,
+  }) async {
     chamouAluno = true;
     throw const ApiException('não deveria chamar');
   }
@@ -36,6 +45,11 @@ class _ContasFalso extends ContasService {
   _ContasFalso({this.erro});
 
   @override
+  Future<List<Conta>> listarContas(Sessao sessao) async => [
+    Conta(id: sessao.agenciaId + 3, nomeAluno: 'Ana', saldo: 10),
+  ];
+
+  @override
   Future<Map<String, dynamic>> criarConta(
     Sessao sessao, {
     required int id,
@@ -43,7 +57,12 @@ class _ContasFalso extends ContasService {
     required String senha,
     required double saldoInicial,
   }) async {
-    ultima = {'id': id, 'nome': nomeAluno, 'saldo': saldoInicial, 'agencia': sessao.agenciaId};
+    ultima = {
+      'id': id,
+      'nome': nomeAluno,
+      'saldo': saldoInicial,
+      'agencia': sessao.agenciaId,
+    };
     if (erro != null) throw erro!;
     return {'id': id, 'nomeAluno': nomeAluno, 'saldo': saldoInicial};
   }
@@ -62,14 +81,19 @@ Future<void> _loginAdmin(WidgetTester tester, int agencia) async {
 Future<void> _preencherConta(WidgetTester tester, {String id = '4'}) async {
   await tester.enterText(find.byKey(const Key('campo-id')), id);
   await tester.enterText(find.byKey(const Key('campo-nome-conta')), 'Lucas');
-  await tester.enterText(find.byKey(const Key('campo-senha-conta')), 'lucas123');
+  await tester.enterText(
+    find.byKey(const Key('campo-senha-conta')),
+    'lucas123',
+  );
   await tester.enterText(find.byKey(const Key('campo-saldo')), '150,50');
 }
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('modo Admin usa loginAdmin e abre a área de administração', (tester) async {
+  testWidgets('modo Admin usa loginAdmin e abre a área de administração', (
+    tester,
+  ) async {
     final auth = _AuthFalso();
     await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
@@ -82,7 +106,9 @@ void main() {
     expect(find.text('Criar conta · Agência 1'), findsOneWidget);
   });
 
-  testWidgets('cria conta na agência do login e mostra confirmação', (tester) async {
+  testWidgets('cria conta na agência do login e mostra confirmação', (
+    tester,
+  ) async {
     final contas = _ContasFalso();
     await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: contas));
     await tester.pumpAndSettle();
@@ -92,11 +118,18 @@ void main() {
     await tester.tap(find.text('Criar conta').last);
     await tester.pumpAndSettle();
 
-    expect(contas.ultima, {'id': 4, 'nome': 'Lucas', 'saldo': 150.5, 'agencia': 1});
+    expect(contas.ultima, {
+      'id': 4,
+      'nome': 'Lucas',
+      'saldo': 150.5,
+      'agencia': 1,
+    });
     expect(find.text('Conta 4 criada para Lucas.'), findsOneWidget);
   });
 
-  testWidgets('recusa conta que não pertence à agência, sem chamar a API', (tester) async {
+  testWidgets('recusa conta que não pertence à agência, sem chamar a API', (
+    tester,
+  ) async {
     final contas = _ContasFalso();
     await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: contas));
     await tester.pumpAndSettle();
@@ -106,13 +139,17 @@ void main() {
     await tester.tap(find.text('Criar conta').last);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('só aceita contas com id % 3 == 1'), findsOneWidget);
+    expect(
+      find.textContaining('só aceita contas com id % 3 == 1'),
+      findsOneWidget,
+    );
     expect(contas.ultima, isNull);
   });
 
   testWidgets('erro da API (conta duplicada) aparece na tela', (tester) async {
     final contas = _ContasFalso(
-        erro: const ApiException('Conta já existe.', statusCode: 409));
+      erro: const ApiException('Conta já existe.', statusCode: 409),
+    );
     await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: contas));
     await tester.pumpAndSettle();
     await _loginAdmin(tester, 1);
@@ -127,7 +164,8 @@ void main() {
 
   testWidgets('token expirado (401) volta ao login', (tester) async {
     final contas = _ContasFalso(
-        erro: const ApiException('Token expirado.', statusCode: 401));
+      erro: const ApiException('Token expirado.', statusCode: 401),
+    );
     await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: contas));
     await tester.pumpAndSettle();
     await _loginAdmin(tester, 1);
@@ -138,5 +176,22 @@ void main() {
 
     expect(find.text('Entrar'), findsOneWidget);
     expect(await SessaoStorage().carregar(), isNull);
+  });
+
+  testWidgets('lista as contas da agência e troca de agência sem sair', (tester) async {
+    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
+    await tester.pumpAndSettle();
+    await _loginAdmin(tester, 1);
+
+    expect(find.text('Ana'), findsOneWidget);
+    expect(find.text('Conta 4'), findsOneWidget); // 1 + 3
+
+    await tester.tap(find.byKey(const Key('agencia-2')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Conta 5'), findsOneWidget); // 2 + 3
+    expect(find.text('Criar conta · Agência 2'), findsOneWidget);
+    expect((await SessaoStorage().carregar())!.agenciaId, 2);
+    expect(find.text('Entrar'), findsNothing); // continua logado
   });
 }

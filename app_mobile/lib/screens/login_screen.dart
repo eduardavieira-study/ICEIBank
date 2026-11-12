@@ -88,17 +88,22 @@ class _LoginScreenState extends State<LoginScreen> {
     final t = context.tokens;
 
     Widget rotulo(IconData icone, String texto) => Padding(
-          padding: const EdgeInsets.only(bottom: 8, left: 2),
-          child: Row(
-            children: [
-              Icon(icone, size: 13, color: Paleta.primary[escuro ? 300 : 600]),
-              const SizedBox(width: 6),
-              Text(texto.toUpperCase(),
-                  style: tema.textTheme.labelSmall?.copyWith(
-                      color: t.textMuted, letterSpacing: 0.8, fontSize: 10.5)),
-            ],
+      padding: const EdgeInsets.only(bottom: 8, left: 2),
+      child: Row(
+        children: [
+          Icon(icone, size: 13, color: Paleta.primary[escuro ? 300 : 600]),
+          const SizedBox(width: 6),
+          Text(
+            texto.toUpperCase(),
+            style: tema.textTheme.labelSmall?.copyWith(
+              color: t.textMuted,
+              letterSpacing: 0.8,
+              fontSize: 10.5,
+            ),
           ),
-        );
+        ],
+      ),
+    );
 
     return Scaffold(
       body: Stack(
@@ -107,17 +112,24 @@ class _LoginScreenState extends State<LoginScreen> {
           Positioned(
             top: -90,
             left: -70,
-            child: _Orbe(tamanho: 260, cor: Paleta.primary[500]!, alpha: escuro ? 0.12 : 0.10),
+            child: _Orbe(
+              tamanho: 260,
+              cor: Paleta.primary[500]!,
+              alpha: escuro ? 0.12 : 0.10,
+            ),
           ),
           Positioned(
             bottom: -110,
             right: -80,
-            child: _Orbe(tamanho: 300, cor: Paleta.secondary[500]!, alpha: escuro ? 0.12 : 0.12),
+            child: _Orbe(
+              tamanho: 300,
+              cor: Paleta.secondary[500]!,
+              alpha: escuro ? 0.12 : 0.12,
+            ),
           ),
           SafeArea(
             child: Stack(
               children: [
-                const Positioned(top: 4, right: 8, child: AlternarTema()),
                 Center(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
@@ -140,8 +152,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Text(
                                     'Seu banco, em qualquer agência.',
                                     textAlign: TextAlign.center,
-                                    style: tema.textTheme.bodyMedium
-                                        ?.copyWith(color: t.textMuted),
+                                    style: tema.textTheme.bodyMedium?.copyWith(
+                                      color: t.textMuted,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -156,26 +169,39 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(22),
                                 decoration: BoxDecoration(
-                                  color: t.surface.withValues(alpha: escuro ? 0.72 : 0.86),
+                                  color: t.surface.withValues(
+                                    alpha: escuro ? 0.72 : 0.86,
+                                  ),
                                   borderRadius: BorderRadius.circular(28),
                                   border: Border.all(
-                                      color: escuro
-                                          ? Paleta.primary[400]!.withValues(alpha: 0.28)
-                                          : Colors.white.withValues(alpha: 0.9)),
+                                    color: escuro
+                                        ? Paleta.primary[400]!.withValues(
+                                            alpha: 0.28,
+                                          )
+                                        : Colors.white.withValues(alpha: 0.9),
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: (escuro ? Colors.black : Paleta.primary[600]!)
-                                          .withValues(alpha: escuro ? 0.5 : 0.16),
+                                      color:
+                                          (escuro
+                                                  ? Colors.black
+                                                  : Paleta.primary[600]!)
+                                              .withValues(
+                                                alpha: escuro ? 0.5 : 0.16,
+                                              ),
                                       blurRadius: 40,
                                       offset: const Offset(0, 18),
                                     ),
                                   ],
                                 ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    Text('Bem-vindo de volta',
-                                        style: tema.textTheme.titleLarge),
+                                    Text(
+                                      'Bem-vindo de volta',
+                                      style: tema.textTheme.titleLarge,
+                                    ),
                                     const SizedBox(height: 20),
                                     rotulo(LucideIcons.building2, 'Agência'),
                                     SegmentedButton<int>(
@@ -189,21 +215,32 @@ class _LoginScreenState extends State<LoginScreen> {
                                       selected: {_agenciaId},
                                       onSelectionChanged: _carregando
                                           ? null
-                                          : (s) => setState(() => _agenciaId = s.first),
+                                          : (s) => setState(
+                                              () => _agenciaId = s.first,
+                                            ),
                                     ),
                                     const SizedBox(height: 16),
-                                    rotulo(LucideIcons.userRound, 'Entrar como'),
+                                    rotulo(
+                                      LucideIcons.userRound,
+                                      'Entrar como',
+                                    ),
                                     SegmentedButton<bool>(
                                       showSelectedIcon: false,
                                       segments: const [
                                         ButtonSegment(
                                           value: false,
-                                          icon: Icon(LucideIcons.user, size: 16),
+                                          icon: Icon(
+                                            LucideIcons.user,
+                                            size: 16,
+                                          ),
                                           label: Text('Aluno'),
                                         ),
                                         ButtonSegment(
                                           value: true,
-                                          icon: Icon(LucideIcons.shield, size: 16),
+                                          icon: Icon(
+                                            LucideIcons.shield,
+                                            size: 16,
+                                          ),
                                           label: Text('Admin'),
                                         ),
                                       ],
@@ -211,9 +248,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       onSelectionChanged: _carregando
                                           ? null
                                           : (s) => setState(() {
-                                                _admin = s.first;
-                                                _erro = null;
-                                              }),
+                                              _admin = s.first;
+                                              _erro = null;
+                                            }),
                                     ),
                                     const SizedBox(height: 20),
                                     TextFormField(
@@ -223,14 +260,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                       textInputAction: TextInputAction.next,
                                       decoration: InputDecoration(
                                         labelText: _admin ? 'Usuário' : 'Nome',
-                                        prefixIcon:
-                                            const Icon(LucideIcons.user, size: 17),
+                                        prefixIcon: const Icon(
+                                          LucideIcons.user,
+                                          size: 17,
+                                        ),
                                         border: const OutlineInputBorder(),
                                       ),
-                                      validator: (v) => (v == null || v.trim().isEmpty)
+                                      validator: (v) =>
+                                          (v == null || v.trim().isEmpty)
                                           ? (_admin
-                                              ? 'Informe o usuário.'
-                                              : 'Informe o nome.')
+                                                ? 'Informe o usuário.'
+                                                : 'Informe o nome.')
                                           : null,
                                     ),
                                     const SizedBox(height: 12),
@@ -242,8 +282,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       onFieldSubmitted: (_) => _entrar(),
                                       decoration: InputDecoration(
                                         labelText: 'Senha',
-                                        prefixIcon:
-                                            const Icon(LucideIcons.lock, size: 17),
+                                        prefixIcon: const Icon(
+                                          LucideIcons.lock,
+                                          size: 17,
+                                        ),
                                         border: const OutlineInputBorder(),
                                         suffixIcon: IconButton(
                                           tooltip: _senhaVisivel
@@ -256,7 +298,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                             size: 17,
                                           ),
                                           onPressed: () => setState(
-                                              () => _senhaVisivel = !_senhaVisivel),
+                                            () =>
+                                                _senhaVisivel = !_senhaVisivel,
+                                          ),
                                         ),
                                       ),
                                       validator: (v) => (v == null || v.isEmpty)
@@ -270,7 +314,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       _ConfigTeste(
                                         aberto: _testeAberto,
                                         aoAlternar: () => setState(
-                                            () => _testeAberto = !_testeAberto),
+                                          () => _testeAberto = !_testeAberto,
+                                        ),
                                         controller: _validadeCtrl,
                                         habilitado: !_carregando,
                                       ),
@@ -281,22 +326,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                         key: const Key('mensagem-erro'),
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: tema.colorScheme.errorContainer,
-                                          borderRadius: BorderRadius.circular(12),
+                                          color:
+                                              tema.colorScheme.errorContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
                                             Icon(
                                               LucideIcons.triangleAlert,
                                               size: 16,
-                                              color: tema.colorScheme.onErrorContainer,
+                                              color: tema
+                                                  .colorScheme
+                                                  .onErrorContainer,
                                             ),
                                             const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 _erro!,
                                                 style: TextStyle(
-                                                  color: tema.colorScheme.onErrorContainer,
+                                                  color: tema
+                                                      .colorScheme
+                                                      .onErrorContainer,
                                                 ),
                                               ),
                                             ),
@@ -317,12 +369,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                             )
                                           : const Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text('Entrar'),
                                                 SizedBox(width: 8),
-                                                Icon(LucideIcons.arrowRight, size: 18),
+                                                Icon(
+                                                  LucideIcons.arrowRight,
+                                                  size: 18,
+                                                ),
                                               ],
                                             ),
                                     ),
@@ -336,8 +392,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 'ICEI · PUC Minas',
                                 textAlign: TextAlign.center,
-                                style: tema.textTheme.bodySmall
-                                    ?.copyWith(color: t.textMuted.withValues(alpha: 0.8)),
+                                style: tema.textTheme.bodySmall?.copyWith(
+                                  color: t.textMuted.withValues(alpha: 0.8),
+                                ),
                               ),
                             ),
                           ],
@@ -346,6 +403,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+                // por último, para ficar por cima da área de rolagem e receber o toque
+                const Positioned(top: 4, right: 8, child: AlternarTema()),
               ],
             ),
           ),
@@ -365,20 +424,21 @@ class _Orbe extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-        child: Container(
-          width: tamanho,
-          height: tamanho,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [cor.withValues(alpha: alpha), cor.withValues(alpha: 0)],
-            ),
-          ),
+    child: Container(
+      width: tamanho,
+      height: tamanho,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            cor.withValues(alpha: alpha),
+            cor.withValues(alpha: 0),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
-
-
 
 // Entrada suave: aparece subindo levemente, com atraso opcional (ms).
 class _Entrada extends StatelessWidget {
@@ -396,7 +456,10 @@ class _Entrada extends StatelessWidget {
       curve: Interval(atraso / total, 1, curve: Curves.easeOutCubic),
       builder: (context, v, filho) => Opacity(
         opacity: v,
-        child: Transform.translate(offset: Offset(0, (1 - v) * 18), child: filho),
+        child: Transform.translate(
+          offset: Offset(0, (1 - v) * 18),
+          child: filho,
+        ),
       ),
       child: child,
     );

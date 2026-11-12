@@ -23,8 +23,11 @@ class _ContasFalso extends ContasService {
   }
 
   @override
-  Future<String> transferir(Sessao sessao,
-      {required int idDestino, required double valor}) async {
+  Future<String> transferir(
+    Sessao sessao, {
+    required int idDestino,
+    required double valor,
+  }) async {
     transferencias.add((destino: idDestino, valor: valor));
     if (erro != null) throw erro!;
     saldo -= valor;
@@ -54,20 +57,27 @@ Future<void> _enviar(WidgetTester tester, String destino, String valor) async {
 }
 
 void main() {
-  testWidgets('transferência local envia os dados e recarrega o saldo', (tester) async {
+  testWidgets('transferência local envia os dados e recarrega o saldo', (
+    tester,
+  ) async {
     final contas = _ContasFalso();
     await _abrir(tester, contas);
 
     await _enviar(tester, '4', '50,25'); // 4 % 3 == 1: mesma agência
 
     expect(contas.transferencias, [(destino: 4, valor: 50.25)]);
-    expect(find.text('Transferência concluída (mesma agência).'), findsOneWidget);
+    expect(
+      find.text('Transferência concluída (mesma agência).'),
+      findsOneWidget,
+    );
     expect(find.text('R\$ 249,75'), findsOneWidget);
     expect(contas.consultas, 2); // carga inicial + recarga após transferir
     expect(find.byKey(const Key('campo-destino')), findsNothing);
   });
 
-  testWidgets('entre agências mostra a mensagem de entrega assíncrona', (tester) async {
+  testWidgets('entre agências mostra a mensagem de entrega assíncrona', (
+    tester,
+  ) async {
     final contas = _ContasFalso()
       ..mensagem =
           'Transferência publicada para a agência de destino (entrega assíncrona).';
@@ -78,7 +88,9 @@ void main() {
     expect(find.text(contas.mensagem), findsOneWidget);
   });
 
-  testWidgets('a dica indica transferência local ou entre agências', (tester) async {
+  testWidgets('a dica indica transferência local ou entre agências', (
+    tester,
+  ) async {
     await _abrir(tester, _ContasFalso());
 
     await tester.enterText(find.byKey(const Key('campo-destino')), '4');
@@ -95,34 +107,56 @@ void main() {
     await _abrir(tester, contas);
 
     await _enviar(tester, '', '10');
-    expect(find.text('Informe um ID de destino válido e não negativo.'), findsOneWidget);
+    expect(
+      find.text('Informe um ID de destino válido e não negativo.'),
+      findsOneWidget,
+    );
 
     await _enviar(tester, '-3', '10');
-    expect(find.text('Informe um ID de destino válido e não negativo.'), findsOneWidget);
+    expect(
+      find.text('Informe um ID de destino válido e não negativo.'),
+      findsOneWidget,
+    );
 
     await _enviar(tester, '1', '10'); // a própria conta
-    expect(find.text('Escolha uma conta de destino diferente da sua.'), findsOneWidget);
+    expect(
+      find.text('Escolha uma conta de destino diferente da sua.'),
+      findsOneWidget,
+    );
 
     await _enviar(tester, '4', '0');
-    expect(find.text('Informe um valor de transferência maior que zero.'), findsOneWidget);
+    expect(
+      find.text('Informe um valor de transferência maior que zero.'),
+      findsOneWidget,
+    );
 
     expect(contas.transferencias, isEmpty);
   });
 
-  testWidgets('erro da API aparece no formulário e o saldo não muda', (tester) async {
+  testWidgets('erro da API aparece no formulário e o saldo não muda', (
+    tester,
+  ) async {
     final contas = _ContasFalso()
-      ..erro = const ApiException('Conta de destino não encontrada.', statusCode: 404);
+      ..erro = const ApiException(
+        'Conta de destino não encontrada.',
+        statusCode: 404,
+      );
     await _abrir(tester, contas);
 
     await _enviar(tester, '4', '10');
 
     expect(find.byKey(const Key('erro-transferencia')), findsOneWidget);
     expect(find.text('Conta de destino não encontrada.'), findsOneWidget);
-    expect(find.byKey(const Key('campo-destino')), findsOneWidget); // continua aberto
+    expect(
+      find.byKey(const Key('campo-destino')),
+      findsOneWidget,
+    ); // continua aberto
     expect(find.text('R\$ 300,00'), findsOneWidget);
   });
 
-  testWidgets('token expirado (401) fecha o formulário e volta ao login', (tester) async {
+  testWidgets('token expirado (401) fecha o formulário e volta ao login', (
+    tester,
+  ) async {
     final contas = _ContasFalso()
       ..erro = const ApiException('Token expirado.', statusCode: 401);
     await _abrir(tester, contas);

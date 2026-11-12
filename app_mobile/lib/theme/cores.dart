@@ -107,17 +107,16 @@ class TokensIceiBank extends ThemeExtension<TokensIceiBank> {
     Color? text,
     Color? textMuted,
     Color? headerBg,
-  }) =>
-      TokensIceiBank(
-        bg: bg ?? this.bg,
-        bgAlt: bgAlt ?? this.bgAlt,
-        surface: surface ?? this.surface,
-        surfaceAlt: surfaceAlt ?? this.surfaceAlt,
-        border: border ?? this.border,
-        text: text ?? this.text,
-        textMuted: textMuted ?? this.textMuted,
-        headerBg: headerBg ?? this.headerBg,
-      );
+  }) => TokensIceiBank(
+    bg: bg ?? this.bg,
+    bgAlt: bgAlt ?? this.bgAlt,
+    surface: surface ?? this.surface,
+    surfaceAlt: surfaceAlt ?? this.surfaceAlt,
+    border: border ?? this.border,
+    text: text ?? this.text,
+    textMuted: textMuted ?? this.textMuted,
+    headerBg: headerBg ?? this.headerBg,
+  );
 
   @override
   TokensIceiBank lerp(ThemeExtension<TokensIceiBank>? other, double t) {

@@ -34,19 +34,21 @@ class OperacaoPendente {
   double get efeitoNoSaldo => tipo == TipoOperacao.deposito ? valor : -valor;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tipo': tipo.nomeApi,
-        'valor': valor,
-        'vetorConhecido': vetorConhecido,
-        'criadaEm': criadaEm.toIso8601String(),
-      };
+    'id': id,
+    'tipo': tipo.nomeApi,
+    'valor': valor,
+    'vetorConhecido': vetorConhecido,
+    'criadaEm': criadaEm.toIso8601String(),
+  };
 
-  factory OperacaoPendente.deJson(Map<String, dynamic> json) => OperacaoPendente(
+  factory OperacaoPendente.deJson(Map<String, dynamic> json) =>
+      OperacaoPendente(
         id: json['id'] as String,
         tipo: TipoOperacao.deNomeApi(json['tipo'] as String),
         valor: (json['valor'] as num).toDouble(),
         vetorConhecido: [
-          for (final v in json['vetorConhecido'] as List<dynamic>) (v as num).toInt(),
+          for (final v in json['vetorConhecido'] as List<dynamic>)
+            (v as num).toInt(),
         ],
         criadaEm: DateTime.parse(json['criadaEm'] as String),
       );

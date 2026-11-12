@@ -13,11 +13,20 @@ class _AuthFalso extends AuthService {
   final validades = <int?>[];
 
   @override
-  Future<Sessao> loginAluno(Agencia agencia, String nomeAluno, String senha,
-      {int? expiraEmSegundos}) async {
+  Future<Sessao> loginAluno(
+    Agencia agencia,
+    String nomeAluno,
+    String senha, {
+    int? expiraEmSegundos,
+  }) async {
     validades.add(expiraEmSegundos);
     return const Sessao(
-        token: 't', role: 'user', agenciaId: 1, idConta: 1, nomeAluno: 'Helena');
+      token: 't',
+      role: 'user',
+      agenciaId: 1,
+      idConta: 1,
+      nomeAluno: 'Helena',
+    );
   }
 }
 
@@ -50,7 +59,9 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('a configuração de testes começa recolhida', (tester) async {
-    await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()));
+    await tester.pumpWidget(
+      IceiBankApp(auth: _AuthFalso(), contas: _ContasFalso()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Configuração de testes'), findsOneWidget);
@@ -72,7 +83,9 @@ void main() {
     expect(auth.validades, [15]);
   });
 
-  testWidgets('validade vazia usa o padrão do backend (nada é enviado)', (tester) async {
+  testWidgets('validade vazia usa o padrão do backend (nada é enviado)', (
+    tester,
+  ) async {
     final auth = _AuthFalso();
     await tester.pumpWidget(IceiBankApp(auth: auth, contas: _ContasFalso()));
     await tester.pumpAndSettle();
@@ -91,14 +104,19 @@ void main() {
       await _abrirTeste(tester); // abre
       await tester.enterText(find.byKey(const Key('campo-validade')), entrada);
       await _entrar(tester);
-      expect(find.text('Informe segundos maiores que zero.'), findsOneWidget,
-          reason: 'entrada "$entrada"');
+      expect(
+        find.text('Informe segundos maiores que zero.'),
+        findsOneWidget,
+        reason: 'entrada "$entrada"',
+      );
       await _abrirTeste(tester); // fecha, para o próximo ciclo
     }
     expect(auth.validades, isEmpty);
   });
 
-  testWidgets('fluxo completo: login, sessão vence, atualizar mostra o aviso', (tester) async {
+  testWidgets('fluxo completo: login, sessão vence, atualizar mostra o aviso', (
+    tester,
+  ) async {
     final contas = _ContasFalso();
     await tester.pumpWidget(IceiBankApp(auth: _AuthFalso(), contas: contas));
     await tester.pumpAndSettle();
@@ -109,10 +127,16 @@ void main() {
     expect(find.text('R\$ 300,00'), findsOneWidget);
 
     contas.expirado = true; // passaram os 15 segundos
-    await tester.drag(find.byType(ListView), const Offset(0, 1200)); // puxar para atualizar
+    await tester.drag(
+      find.byType(ListView),
+      const Offset(0, 1200),
+    ); // puxar para atualizar
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('aviso-login')), findsOneWidget);
-    expect(find.text('Sua sessão expirou. Faça login novamente.'), findsOneWidget);
+    expect(
+      find.text('Sua sessão expirou. Faça login novamente.'),
+      findsOneWidget,
+    );
   });
 }

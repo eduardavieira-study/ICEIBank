@@ -15,6 +15,9 @@ import '../services/contas_service.dart';
 import '../services/lideranca_service.dart';
 import '../theme/cores.dart';
 import '../util/formato.dart';
+import '../widgets/animacoes.dart';
+import '../widgets/aviso.dart';
+import '../widgets/cartao_virar.dart';
 import '../widgets/fundo.dart';
 import '../widgets/marca.dart';
 import '../widgets/movimentacao_sheet.dart';
@@ -288,16 +291,14 @@ class _HomeScreenState extends State<HomeScreen> {
           () => _desatualizadoDesde = emCache?.atualizadoEm ?? DateTime.now(),
         );
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _tentativaSemConexao || _desatualizadoDesde != null
-                ? '$nome de $valor registrado sem conexão. '
-                      'Será enviado quando a agência voltar.'
-                : '$nome de $valor colocado na fila, atrás das operações '
-                      'pendentes.',
-          ),
-        ),
+      Aviso.mostrar(
+        context,
+        _tentativaSemConexao || _desatualizadoDesde != null
+            ? '$nome de $valor registrado sem conexão. '
+                  'Será enviado quando a agência voltar.'
+            : '$nome de $valor colocado na fila, atrás das operações '
+                  'pendentes.',
+        tipo: TipoAviso.info,
       );
       return;
     }
@@ -306,8 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _conta = resultado.conta;
       _erro = null;
     });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('$nome de $valor realizado!')));
+    Aviso.mostrar(context, '$nome de $valor realizado!');
     // depósito e saque não devolvem o vetorAtual: relê o saldo em segundo
     // plano para manter a cópia local (e o vetor) em dia
     try {
@@ -330,8 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
       aoNaoAutorizado: widget.aoSessaoExpirada,
     );
     if (mensagem == null || !mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(mensagem)));
+    Aviso.mostrar(context, mensagem);
     // o débito já foi feito na origem: recarrega o saldo
     await _carregar();
   }
@@ -376,27 +375,29 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24),
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Olá, ${widget.sessao.nomeAluno ?? 'aluno'}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tema.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Conta ${widget.sessao.idConta} · ${agencia.nome}',
-                            style: tema.textTheme.bodySmall,
-                          ),
-                        ],
+                Entrada(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Olá, ${widget.sessao.nomeAluno ?? 'aluno'}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tema.textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Conta ${widget.sessao.idConta} · ${agencia.nome}',
+                              style: tema.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 22),
                 if (_erro != null) ...[
@@ -482,12 +483,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                _CartaoSaldo(
-                  nome: widget.sessao.nomeAluno ?? '',
-                  agencia: agencia.nome,
-                  saldo: _saldoProvisorio,
-                  provisorio: _pendentes.isNotEmpty,
-                  carregando: _carregando,
+                Entrada(
+                  ordem: 1,
+                  child: _CartaoSaldo(
+                    nome: widget.sessao.nomeAluno ?? '',
+                    conta: widget.sessao.idConta,
+                    agencia: agencia.nome,
+                    saldo: _saldoProvisorio,
+                    provisorio: _pendentes.isNotEmpty,
+                    carregando: _carregando,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: Text(
+                    'Toque no cartão para virar',
+                    style: tema.textTheme.bodySmall?.copyWith(
+                      color: context.tokens.textMuted.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
                 if (_pendentes.isNotEmpty) ...[
                   const SizedBox(height: 16),
@@ -497,42 +512,57 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        key: const Key('acao-depositar'),
-                        onPressed: podeMovimentar
-                            ? () => _movimentar(TipoMovimentacao.deposito)
-                            : null,
-                        icon: Icon(TipoMovimentacao.deposito.icone, size: 16),
-                        label: const Text('Depositar'),
+                Entrada(
+                  ordem: 2,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Pressionavel(
+                          child: FilledButton.icon(
+                            key: const Key('acao-depositar'),
+                            onPressed: podeMovimentar
+                                ? () => _movimentar(TipoMovimentacao.deposito)
+                                : null,
+                            icon: Icon(
+                              TipoMovimentacao.deposito.icone,
+                              size: 16,
+                            ),
+                            label: const Text('Depositar'),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const Key('acao-sacar'),
-                        onPressed: podeMovimentar
-                            ? () => _movimentar(TipoMovimentacao.saque)
-                            : null,
-                        icon: Icon(TipoMovimentacao.saque.icone, size: 16),
-                        label: const Text('Sacar'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Pressionavel(
+                          child: OutlinedButton.icon(
+                            key: const Key('acao-sacar'),
+                            onPressed: podeMovimentar
+                                ? () => _movimentar(TipoMovimentacao.saque)
+                                : null,
+                            icon: Icon(TipoMovimentacao.saque.icone, size: 16),
+                            label: const Text('Sacar'),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  key: const Key('acao-transferir'),
-                  onPressed: podeMovimentar && online && _pendentes.isEmpty
-                      ? _transferir
-                      : null,
-                  icon: const Icon(LucideIcons.arrowRightLeft, size: 16),
-                  label: const Text('Transferir'),
+                Entrada(
+                  ordem: 3,
+                  child: Pressionavel(
+                    child: OutlinedButton.icon(
+                      key: const Key('acao-transferir'),
+                      onPressed: podeMovimentar && online && _pendentes.isEmpty
+                          ? _transferir
+                          : null,
+                      icon: const Icon(LucideIcons.arrowRightLeft, size: 16),
+                      label: const Text('Transferir'),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
-                PainelLideranca(servico: _lideranca),
+                Entrada(ordem: 4, child: PainelLideranca(servico: _lideranca)),
                 if (kDebugMode) ...[
                   const SizedBox(height: 16),
                   Card(
@@ -849,10 +879,11 @@ class _AvisoOffline extends StatelessWidget {
   }
 }
 
-
-// Cartão com o gradiente da marca, como o BankCard do frontend web.
+// Cartão da marca, como o BankCard do frontend web. Vira ao toque: a frente
+// mostra o saldo, o verso os dados da conta.
 class _CartaoSaldo extends StatelessWidget {
   final String nome;
+  final int? conta;
   final String agencia;
   final double? saldo;
   final bool provisorio; // há operações pendentes somadas ao saldo
@@ -860,6 +891,7 @@ class _CartaoSaldo extends StatelessWidget {
 
   const _CartaoSaldo({
     required this.nome,
+    required this.conta,
     required this.agencia,
     required this.saldo,
     required this.provisorio,
@@ -870,71 +902,23 @@ class _CartaoSaldo extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1.6,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: Paleta.gradienteMarca,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Paleta.secondary[600]!.withValues(alpha: 0.35),
-              blurRadius: 28,
-              offset: const Offset(0, 14),
+      child: CartaoVirar(
+        frente: CartaoBase(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _ConteudoCartao(
+              nome: nome,
+              agencia: agencia,
+              saldo: saldo,
+              provisorio: provisorio,
+              carregando: carregando,
             ),
-            BoxShadow(
-              color: Paleta.primary[600]!.withValues(alpha: 0.25),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              // círculos translúcidos de enfeite, como o brilho do cartão web
-              Positioned(
-                right: -50,
-                top: -50,
-                child: _Circulo(tamanho: 190, alpha: 0.12),
-              ),
-              Positioned(
-                left: -40,
-                bottom: -70,
-                child: _Circulo(tamanho: 170, alpha: 0.08),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: _ConteudoCartao(
-                  nome: nome,
-                  agencia: agencia,
-                  saldo: saldo,
-                  provisorio: provisorio,
-                  carregando: carregando,
-                ),
-              ),
-            ],
           ),
         ),
+        verso: VersoCartao(nome: nome, conta: conta, agencia: agencia),
       ),
     );
   }
-}
-
-class _Circulo extends StatelessWidget {
-  final double tamanho;
-  final double alpha;
-
-  const _Circulo({required this.tamanho, required this.alpha});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: tamanho,
-    height: tamanho,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white.withValues(alpha: alpha),
-    ),
-  );
 }
 
 class _ConteudoCartao extends StatelessWidget {
@@ -974,18 +958,24 @@ class _ConteudoCartao extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              provisorio ? 'Saldo provisório' : 'Saldo disponível',
-              style: tema.bodySmall?.copyWith(
-                color: branco.withValues(alpha: 0.75),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Text(
+                provisorio ? 'Saldo provisório' : 'Saldo disponível',
+                key: ValueKey(provisorio),
+                style: tema.bodySmall?.copyWith(
+                  color: branco.withValues(alpha: 0.75),
+                ),
               ),
             ),
             const SizedBox(height: 4),
             if (saldo != null)
-              Text(
-                formatarReais(saldo!),
+              KeyedSubtree(
                 key: const Key('saldo-valor'),
-                style: tema.headlineMedium?.copyWith(color: branco),
+                child: ReaisAnimado(
+                  valor: saldo!,
+                  estilo: tema.headlineMedium?.copyWith(color: branco),
+                ),
               )
             else if (carregando)
               const SizedBox(
