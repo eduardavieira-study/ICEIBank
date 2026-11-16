@@ -16,7 +16,6 @@ class LogoIceiBank extends StatelessWidget {
     final estilo = Theme.of(context).textTheme.titleLarge!.copyWith(
       fontSize: tamanho,
       fontWeight: FontWeight.w800,
-      fontVariations: const [FontVariation('wght', 800)],
       letterSpacing: -0.5,
     );
     return Text.rich(

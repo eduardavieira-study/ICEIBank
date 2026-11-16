@@ -63,9 +63,9 @@ class _CartaoVirarState extends State<CartaoVirar>
                 ? Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.rotationY(math.pi),
-                    child: widget.verso,
+                    child: RepaintBoundary(child: widget.verso),
                   )
-                : widget.frente,
+                : RepaintBoundary(child: widget.frente),
           );
         },
       ),

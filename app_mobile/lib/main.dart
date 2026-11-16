@@ -144,19 +144,11 @@ class _IceiBankAppState extends State<IceiBankApp> {
         // o fundo radial fica atrás de todas as telas e sheets
         builder: (context, child) => FundoIceiBank(child: child!),
         home: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 380),
+          duration: const Duration(milliseconds: 260),
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeIn,
-          transitionBuilder: (filho, animacao) => FadeTransition(
-            opacity: animacao,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.02),
-                end: Offset.zero,
-              ).animate(animacao),
-              child: filho,
-            ),
-          ),
+          transitionBuilder: (filho, animacao) =>
+              FadeTransition(opacity: animacao, child: filho),
           child: KeyedSubtree(key: ValueKey(_chaveTela), child: tela),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
@@ -26,26 +27,34 @@ class _PintorGranulado extends CustomPainter {
 
   _PintorGranulado(this.opacidade);
 
+  // Os pontos só dependem do tamanho: são sorteados uma vez e reaproveitados
+  // (antes eram 14 mil sorteios + listas de Offset a cada pintura).
+  static final Map<(int, int), (Float32List, Float32List)> _cache = {};
+
+  static (Float32List, Float32List) _pontos(Size size) {
+    return _cache.putIfAbsent((size.width.round(), size.height.round()), () {
+      final rnd = Random(7);
+      final quantidade = (size.width * size.height / 20).clamp(0, 6000).toInt();
+      final claro = <double>[];
+      final escuro = <double>[];
+      for (var i = 0; i < quantidade; i++) {
+        (rnd.nextBool() ? claro : escuro)
+          ..add(rnd.nextDouble() * size.width)
+          ..add(rnd.nextDouble() * size.height);
+      }
+      return (Float32List.fromList(claro), Float32List.fromList(escuro));
+    });
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final rnd = Random(7);
-    final area = size.width * size.height;
-    final quantidade = (area / 14).clamp(0, 14000).toInt();
-    final claro = <Offset>[];
-    final escuro = <Offset>[];
-    for (var i = 0; i < quantidade; i++) {
-      final ponto = Offset(
-        rnd.nextDouble() * size.width,
-        rnd.nextDouble() * size.height,
-      );
-      (rnd.nextBool() ? claro : escuro).add(ponto);
-    }
+    final (claro, escuro) = _pontos(size);
     Paint tinta(Color c) => Paint()
       ..color = c.withValues(alpha: 0.16 * opacidade)
-      ..strokeWidth = 1.1
+      ..strokeWidth = 1.4
       ..strokeCap = StrokeCap.square;
-    canvas.drawPoints(PointMode.points, claro, tinta(Colors.white));
-    canvas.drawPoints(PointMode.points, escuro, tinta(Colors.black));
+    canvas.drawRawPoints(PointMode.points, claro, tinta(Colors.white));
+    canvas.drawRawPoints(PointMode.points, escuro, tinta(Colors.black));
   }
 
   @override

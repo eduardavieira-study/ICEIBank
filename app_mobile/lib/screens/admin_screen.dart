@@ -469,12 +469,19 @@ class _AdminScreenState extends State<AdminScreen> {
     return Column(
       key: const Key('lista-contas'),
       children: [
+        // só as primeiras linhas animam a entrada (cada Entrada cria um
+        // AnimationController); as demais, fora da tela inicial, entram secas
         for (var i = 0; i < lista.length; i++)
-          Entrada(
-            key: ValueKey('${widget.sessao.agenciaId}-${lista[i].id}'),
-            ordem: i,
-            child: _LinhaConta(conta: lista[i]),
-          ),
+          i < 8
+              ? Entrada(
+                  key: ValueKey('${widget.sessao.agenciaId}-${lista[i].id}'),
+                  ordem: i,
+                  child: _LinhaConta(conta: lista[i]),
+                )
+              : RepaintBoundary(
+                  key: ValueKey('${widget.sessao.agenciaId}-${lista[i].id}'),
+                  child: _LinhaConta(conta: lista[i]),
+                ),
       ],
     );
   }

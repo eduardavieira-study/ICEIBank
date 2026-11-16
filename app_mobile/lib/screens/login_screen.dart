@@ -7,6 +7,7 @@ import '../models/sessao.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../theme/cores.dart';
+import '../widgets/animacoes.dart';
 import '../widgets/fundo.dart';
 import '../widgets/marca.dart';
 
@@ -165,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                             const SizedBox(height: 26),
                             _Entrada(
-                              atraso: 120,
+                              atraso: 140,
                               child: Container(
                                 padding: const EdgeInsets.all(22),
                                 decoration: BoxDecoration(
@@ -388,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 20),
                             _Entrada(
-                              atraso: 240,
+                              atraso: 280,
                               child: Text(
                                 'ICEI · PUC Minas',
                                 textAlign: TextAlign.center,
@@ -440,7 +441,9 @@ class _Orbe extends StatelessWidget {
   );
 }
 
-// Entrada suave: aparece subindo levemente, com atraso opcional (ms).
+// Entrada suave: aparece subindo levemente, com atraso opcional (ms). Usa o
+// widget compartilhado (Fade/Slide transitions + RepaintBoundary), que não
+// reconstrói a subárvore a cada frame.
 class _Entrada extends StatelessWidget {
   final int atraso;
   final Widget child;
@@ -448,22 +451,8 @@ class _Entrada extends StatelessWidget {
   const _Entrada({required this.atraso, required this.child});
 
   @override
-  Widget build(BuildContext context) {
-    final total = 500 + atraso;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: total),
-      curve: Interval(atraso / total, 1, curve: Curves.easeOutCubic),
-      builder: (context, v, filho) => Opacity(
-        opacity: v,
-        child: Transform.translate(
-          offset: Offset(0, (1 - v) * 18),
-          child: filho,
-        ),
-      ),
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) =>
+      Entrada(ordem: atraso ~/ 70, child: child);
 }
 
 // Aviso não-erro (ex.: sessão expirada). Mesmo estilo âmbar dos avisos do web:

@@ -134,71 +134,73 @@ class _AvisoWidgetState extends State<_AvisoWidget>
             key: UniqueKey(),
             direction: DismissDirection.up,
             onDismissed: (_) => widget.aoTerminar(),
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 420),
-                padding: const EdgeInsets.fromLTRB(10, 10, 18, 10),
-                decoration: BoxDecoration(
-                  color: t.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: t.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cor.withValues(alpha: escuro ? 0.22 : 0.16),
-                      blurRadius: 28,
-                      offset: const Offset(0, 10),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: escuro ? 0.35 : 0.05,
+            child: RepaintBoundary(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 18, 10),
+                  decoration: BoxDecoration(
+                    color: t.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: t.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cor.withValues(alpha: escuro ? 0.22 : 0.16),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
                       ),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: cor.withValues(alpha: 0.14),
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: escuro ? 0.35 : 0.05,
+                        ),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                      child: widget.tipo == TipoAviso.sucesso
-                          ? AnimatedBuilder(
-                              animation: _icone,
-                              builder: (_, _) => CustomPaint(
-                                painter: _PintorCheck(
-                                  progresso: Curves.easeOut.transform(
-                                    _icone.value,
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cor.withValues(alpha: 0.14),
+                        ),
+                        child: widget.tipo == TipoAviso.sucesso
+                            ? AnimatedBuilder(
+                                animation: _icone,
+                                builder: (_, _) => CustomPaint(
+                                  painter: _PintorCheck(
+                                    progresso: Curves.easeOut.transform(
+                                      _icone.value,
+                                    ),
+                                    cor: cor,
                                   ),
-                                  cor: cor,
                                 ),
+                              )
+                            : Icon(
+                                widget.tipo == TipoAviso.erro
+                                    ? LucideIcons.triangleAlert
+                                    : LucideIcons.clock,
+                                size: 16,
+                                color: cor,
                               ),
-                            )
-                          : Icon(
-                              widget.tipo == TipoAviso.erro
-                                  ? LucideIcons.triangleAlert
-                                  : LucideIcons.clock,
-                              size: 16,
-                              color: cor,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        widget.texto,
-                        style: tema.textTheme.bodyMedium?.copyWith(
-                          color: t.text,
-                          fontWeight: FontWeight.w500,
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          widget.texto,
+                          style: tema.textTheme.bodyMedium?.copyWith(
+                            color: t.text,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

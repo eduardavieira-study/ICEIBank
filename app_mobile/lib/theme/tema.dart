@@ -6,42 +6,31 @@ import 'cores.dart';
 // Sora nos títulos e Inter no texto, cartões com borda e botões discretos.
 // Segue o modo claro/escuro do sistema.
 class TemaIceiBank {
-  static ThemeData claro() => _construir(Brightness.light);
-  static ThemeData escuro() => _construir(Brightness.dark);
+  // Construir um ThemeData é caro (centenas de objetos). Como o tema nunca muda
+  // em tempo de execução, cada modo é montado uma única vez, sob demanda.
+  static ThemeData? _claro;
+  static ThemeData? _escuro;
+
+  static ThemeData claro() => _claro ??= _construir(Brightness.light);
+  static ThemeData escuro() => _escuro ??= _construir(Brightness.dark);
 
   static TextStyle _sora(double tamanho, double peso, Color cor) => TextStyle(
     fontFamily: 'Sora',
     fontSize: tamanho,
     fontWeight: FontWeight.values[(peso ~/ 100) - 1],
-    fontVariations: [FontVariation('wght', peso)],
     color: cor,
   );
-
-  // As fontes são variáveis: o eixo de peso precisa ser definido de forma
-  // explícita, além do FontWeight.
-  static TextStyle? _variavel(TextStyle? s) {
-    if (s == null) return null;
-    final peso = (s.fontWeight ?? FontWeight.w400).value.toDouble();
-    return s.copyWith(fontVariations: [FontVariation('wght', peso)]);
-  }
 
   static TextTheme _textos(Brightness b, TokensIceiBank t) {
     final base = ThemeData(brightness: b).textTheme
         .apply(fontFamily: 'Inter', bodyColor: t.text, displayColor: t.text);
     final comVariacoes = base.copyWith(
       // texto digitado nos campos (o web usa text-sm, 14px)
-      bodyLarge: _variavel(base.bodyLarge?.copyWith(fontSize: 14)),
-      bodyMedium: _variavel(base.bodyMedium),
-      bodySmall: _variavel(base.bodySmall)?.copyWith(color: t.textMuted),
-      labelLarge: _variavel(
-        base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      labelMedium: _variavel(
-        base.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      labelSmall: _variavel(
-        base.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-      ),
+      bodyLarge: base.bodyLarge?.copyWith(fontSize: 14),
+      bodySmall: base.bodySmall?.copyWith(color: t.textMuted),
+      labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      labelMedium: base.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      labelSmall: base.labelSmall?.copyWith(fontWeight: FontWeight.w600),
     );
     // Títulos em Sora, como o `font-display` do web.
     return comVariacoes.copyWith(
@@ -107,12 +96,10 @@ class TemaIceiBank {
     final sombra = escuro
         ? Colors.black.withValues(alpha: 0.5)
         : Paleta.primary[600]!.withValues(alpha: 0.12);
-    final estiloBotao = _variavel(
-      const TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 14.5,
-        fontWeight: FontWeight.w700,
-      ),
+    const estiloBotao = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 14.5,
+      fontWeight: FontWeight.w700,
     );
     final textos = _textos(b, t);
 
@@ -309,13 +296,11 @@ class TemaIceiBank {
                 ? Colors.white
                 : t.textMuted,
           ),
-          textStyle: WidgetStatePropertyAll(
-            _variavel(
-              const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -324,13 +309,11 @@ class TemaIceiBank {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: escuro ? Paleta.primary[800] : Paleta.primary[950],
-        contentTextStyle: _variavel(
-          const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
+        contentTextStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
         ),
         shape: botao,
       ),

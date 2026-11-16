@@ -41,18 +41,19 @@ class _EntradaState extends State<Entrada> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  late final Animation<Offset> _deslize = Tween<Offset>(
+    begin: const Offset(0, 0.06),
+    end: Offset.zero,
+  ).animate(_curva);
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _curva,
-      builder: (_, filho) => Opacity(
-        opacity: _curva.value,
-        child: Transform.translate(
-          offset: Offset(0, 18 * (1 - _curva.value)),
-          child: filho,
-        ),
+    // RepaintBoundary: a animação deste bloco não redesenha o resto da tela.
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: _curva,
+        child: SlideTransition(position: _deslize, child: widget.child),
       ),
-      child: widget.child,
     );
   }
 }

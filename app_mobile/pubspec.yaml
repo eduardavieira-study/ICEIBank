@@ -63,13 +63,27 @@ flutter:
 
   # Mesmas fontes do frontend web (Sora nos títulos, Inter no texto), embutidas
   # no app para funcionarem também offline. Ambas sob a licença SIL OFL 1.1.
+  # Instâncias ESTÁTICAS (uma por peso, só caracteres latinos): fontes variáveis
+  # são bem mais lentas para renderizar no Android e pesam 5x mais.
   fonts:
     - family: Sora
       fonts:
-        - asset: assets/fonts/Sora-Variable.ttf
+        - asset: assets/fonts/Sora-700.ttf
+          weight: 700
+        - asset: assets/fonts/Sora-800.ttf
+          weight: 800
     - family: Inter
       fonts:
-        - asset: assets/fonts/InterVariable.ttf
+        - asset: assets/fonts/Inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-800.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

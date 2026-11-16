@@ -26,44 +26,53 @@ class FundoIceiBank extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: t.bg),
-        // rosa: canto superior direito
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0.95, -1.05),
-              radius: 1.0,
-              colors: [
-                rosa.withValues(alpha: aRosa),
-                rosa.withValues(alpha: 0),
-              ],
-            ),
-          ),
-        ),
-        // roxo: canto inferior esquerdo
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-1.0, 1.05),
-              radius: 1.0,
-              colors: [
-                roxo.withValues(alpha: aRoxo),
-                roxo.withValues(alpha: 0),
-              ],
-            ),
-          ),
-        ),
-        // rosa bem leve: lateral esquerda, para o meio da tela não ficar chapado
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-1.1, -0.15),
-              radius: 0.8,
-              colors: [
-                rosa.withValues(alpha: aRosa * 0.3),
-                rosa.withValues(alpha: 0),
-              ],
-            ),
+        // Os gradientes nunca mudam: ficam numa camada própria, sem serem
+        // repintados a cada frame das animações das telas.
+        RepaintBoundary(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: t.bg),
+              // rosa: canto superior direito
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.95, -1.05),
+                    radius: 1.0,
+                    colors: [
+                      rosa.withValues(alpha: aRosa),
+                      rosa.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+              // roxo: canto inferior esquerdo
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(-1.0, 1.05),
+                    radius: 1.0,
+                    colors: [
+                      roxo.withValues(alpha: aRoxo),
+                      roxo.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+              // rosa bem leve: lateral esquerda, para o meio da tela não ficar chapado
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(-1.1, -0.15),
+                    radius: 0.8,
+                    colors: [
+                      rosa.withValues(alpha: aRosa * 0.3),
+                      rosa.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         child,
