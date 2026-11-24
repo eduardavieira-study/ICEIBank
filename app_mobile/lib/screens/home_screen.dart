@@ -24,6 +24,9 @@ import '../widgets/movimentacao_sheet.dart';
 import '../widgets/painel_lideranca.dart';
 import '../widgets/transferencia_sheet.dart';
 
+// Mesmo limite da agência (LIMITE_SALDO_BAIXO em agencia/src/config.py).
+const double limiteSaldoBaixo = 50.0;
+
 // Tela principal do aluno: saldo da conta. Puxar para baixo atualiza.
 //
 // Funciona offline: depósitos e saques feitos sem conexão vão para uma fila no
@@ -483,6 +486,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+                if (_saldoProvisorio != null &&
+                    _saldoProvisorio! < limiteSaldoBaixo) ...[
+                  _CartaoAviso(
+                    chave: const Key('saldo-baixo'),
+                    icone: LucideIcons.triangleAlert,
+                    titulo: 'Saldo baixo',
+                    linhas: [
+                      'Seu saldo está em ${formatarReais(_saldoProvisorio!)}, '
+                          'abaixo de ${formatarReais(limiteSaldoBaixo)}.',
+                    ],
+                    alerta: true,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Entrada(
                   ordem: 1,
                   child: _CartaoSaldo(
@@ -681,22 +698,26 @@ class _CartaoAviso extends StatelessWidget {
   final String titulo;
   final List<String> linhas;
   final bool erro;
-  final VoidCallback aoFechar;
+  final bool alerta; // âmbar: atenção, sem ser erro
+  final VoidCallback? aoFechar; // sem ele, o aviso não pode ser dispensado
 
   const _CartaoAviso({
     required this.chave,
     required this.icone,
     required this.titulo,
     required this.linhas,
-    required this.aoFechar,
+    this.aoFechar,
     this.erro = false,
+    this.alerta = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final escuro = tema.brightness == Brightness.dark;
-    final cor = erro
+    final cor = alerta
+        ? const Color(0xFFD97706)
+        : erro
         ? tema.colorScheme.error
         : Paleta.accent[escuro ? 400 : 600]!;
 
@@ -731,12 +752,13 @@ class _CartaoAviso extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Dispensar',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(LucideIcons.x, size: 14),
-            onPressed: aoFechar,
-          ),
+          if (aoFechar != null)
+            IconButton(
+              tooltip: 'Dispensar',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(LucideIcons.x, size: 14),
+              onPressed: aoFechar,
+            ),
         ],
       ),
     );

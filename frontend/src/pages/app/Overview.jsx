@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { RefreshCw, Banknote, Clock, Shield, ShieldPlus, ArrowRight, Wallet } from 'lucide-react';
+import { RefreshCw, Banknote, Clock, Shield, ShieldPlus, ArrowRight, Wallet, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import PasswordInput from '../../components/PasswordInput';
 
@@ -16,14 +16,32 @@ const blockNegative = (e) => {
   }
 };
 
+// Mesmo limite da agência (LIMITE_SALDO_BAIXO em agencia/src/config.py).
+const LIMITE_SALDO_BAIXO = 50;
+
 function StudentOverview() {
   const { nomeAluno, idConta, dadosConta, loadingConta, carregarDadosConta, extrato } = useApp();
   const recentes = [...extrato]
     .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora))
     .slice(0, 3);
+  const saldoBaixo = dadosConta && dadosConta.saldo < LIMITE_SALDO_BAIXO;
 
   return (
     <div className="space-y-6">
+      {saldoBaixo && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4"
+        >
+          <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Saldo baixo</p>
+            <p className="text-xs text-muted mt-0.5">
+              Seu saldo está em R$ {dadosConta.saldo.toFixed(2)}, abaixo de R$ {LIMITE_SALDO_BAIXO.toFixed(2)}.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="card p-6 relative overflow-hidden">
         <div className="absolute -bottom-12 -right-12 w-56 h-56 rounded-full bg-brand-gradient opacity-[0.16] blur-2xl pointer-events-none" />
 

@@ -221,12 +221,18 @@ export function AppProvider({ children }) {
     }
   };
 
-  const carregarDadosConta = async () => {
+  // Mesmo limite da agência (LIMITE_SALDO_BAIXO em agencia/src/config.py).
+  const LIMITE_SALDO_BAIXO = 50;
+
+  const carregarDadosConta = async (opcoes) => {
     if (role !== 'user' || !token) return;
     setLoadingConta(true);
     try {
       const data = await fetchWithAuth(`/contas/${idConta}`);
       setDadosConta(data);
+      if (opcoes?.avisarSaldoBaixo && data.saldo < LIMITE_SALDO_BAIXO) {
+        addToast(`Atenção: saldo baixo (R$ ${data.saldo.toFixed(2)}).`, 'info');
+      }
 
       const histData = await fetchWithAuth(`/contas/${idConta}/historico`);
       setExtrato(histData);
@@ -274,7 +280,7 @@ export function AppProvider({ children }) {
       });
       addToast(`Saque de R$ ${valor.toFixed(2)} realizado!`, 'success');
       setValorSaque('');
-      carregarDadosConta();
+      carregarDadosConta({ avisarSaldoBaixo: true });
     } catch (err) {}
   };
 
@@ -304,7 +310,7 @@ export function AppProvider({ children }) {
       addToast(data.mensagem || 'Transferência efetuada com sucesso!', 'success');
       setTransferDestId('');
       setTransferValor('');
-      carregarDadosConta();
+      carregarDadosConta({ avisarSaldoBaixo: true });
     } catch (err) {}
   };
 
