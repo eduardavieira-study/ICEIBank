@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ICEIBank Sprints 2 e 3</title>
+<style>
+@font-face{font-family:Sora;font-weight:700;src:url(assets/Sora-700.ttf)}
+@font-face{font-family:Sora;font-weight:800;src:url(assets/Sora-800.ttf)}
+@font-face{font-family:Inter;font-weight:400;src:url(assets/Inter-400.ttf)}
+@font-face{font-family:Inter;font-weight:600;src:url(assets/Inter-600.ttf)}
+@font-face{font-family:Inter;font-weight:700;src:url(assets/Inter-700.ttf)}
+:root{
+  --p:#6D28D9;--p3:#B695F6;--p4:#9B6EF3;--pk:#EC4899;--pk3:#F894CB;--ac:#22B2A3;--ac3:#71E4D4;
+  --bg:#150830;--bg2:#220A47;--tx:#F5F1FE;--mut:#B9AAD9;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);
+  --warn:#F59E0B;--bad:#F43F5E;
+}
+*{box-sizing:border-box;margin:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+body{font-family:Inter,sans-serif;color:var(--tx)}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;
+  background:radial-gradient(900px 700px at 88% 8%,rgba(236,72,153,.28),transparent 60%),
+             radial-gradient(1000px 800px at 8% 100%,rgba(109,40,217,.45),transparent 62%),
+             linear-gradient(160deg,#1B0A3C,#150830 60%)}
+#dots{position:absolute;inset:-60px;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.14) 1.5px,transparent 1.6px);background-size:60px 60px}
+#bar{position:absolute;left:0;bottom:0;height:6px;width:0;background:linear-gradient(90deg,var(--p),var(--pk));z-index:50}
+.scene{position:absolute;inset:0;display:none}
+.abs{position:absolute}
+.kicker{position:absolute;left:120px;top:78px;font:700 24px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--pk3)}
+.title{position:absolute;left:120px;top:118px;font:800 68px/1.05 Sora;letter-spacing:-.01em;width:1500px}
+.sub{position:absolute;left:120px;top:206px;font:400 32px/1.3 Inter;color:var(--mut);width:1500px}
+.cap{position:absolute;left:0;right:0;text-align:center;font:600 42px/1.2 Inter}
+.cap b{color:var(--pk3);font-weight:700}
+.logo{font:800 120px Sora;letter-spacing:-.02em}
+.logo span{color:var(--p3)}
+.pill{display:inline-block;padding:8px 20px;border-radius:999px;font:700 24px Inter}
+.pill.g{background:rgba(34,178,163,.2);color:var(--ac3);border:1.5px solid rgba(34,178,163,.6)}
+.pill.r{background:rgba(244,63,94,.2);color:#FDA4AF;border:1.5px solid rgba(244,63,94,.6)}
+.pill.v{background:rgba(155,110,243,.2);color:#D3C0FA;border:1.5px solid rgba(155,110,243,.6)}
+.chip{display:inline-block;padding:12px 24px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);font:600 28px Inter}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.box{border-radius:28px;background:var(--card);border:2px solid var(--line)}
+.box h4{font:800 36px Sora}
+/* card */
+.bcard{width:660px;height:410px;border-radius:32px;background:linear-gradient(135deg,#6D28D9,#C0389B);
+  box-shadow:0 40px 90px rgba(192,56,155,.35);padding:44px;position:absolute}
+.bcard .t{font:800 38px Sora}
+.bcard .l{font:400 26px Inter;opacity:.8;margin-top:120px}
+.bcard .v{font:800 76px Sora;margin-top:6px}
+.bcard .n{position:absolute;left:44px;bottom:36px;font:400 24px Inter;opacity:.8}
+/* node */
+.node{position:absolute;width:360px;height:280px;text-align:center;padding-top:50px}
+.node h4{font:800 44px Sora}
+.node p{font:400 26px Inter;color:var(--mut);margin-top:6px}
+.node .st{position:absolute;left:0;right:0;bottom:30px}
+/* vectors */
+.vec{position:absolute;display:flex;gap:14px}
+.cell{width:110px;height:110px;border-radius:20px;background:rgba(255,255,255,.1);border:2px solid var(--line);
+  font:800 54px/106px Sora;text-align:center}
+.vlab{position:absolute;font:600 24px Inter;color:var(--mut);white-space:nowrap}
+.vlab b{color:var(--tx)}
+.sym{position:absolute;width:110px;height:110px;border-radius:55px;font:800 56px/104px Sora;text-align:center}
+.sym.ok{background:rgba(34,178,163,.2);color:var(--ac3);border:2px solid var(--ac)}
+.sym.no{background:rgba(236,72,153,.2);color:var(--pk3);border:2px solid var(--pk)}
+.sym.eq{background:rgba(255,255,255,.08);color:var(--mut);border:2px solid var(--line)}
+.verdict{position:absolute;width:420px;font:800 40px/1.1 Sora}
+.verdict small{display:block;font:400 26px/1.3 Inter;color:var(--mut);margin-top:8px}
+/* terminal */
+.term{position:absolute;border-radius:24px;background:#0E0620;border:2px solid var(--line);overflow:hidden}
+.term .hd{height:56px;border-bottom:1.5px solid var(--line);padding:14px 22px;font:600 22px Inter;color:var(--mut)}
+.term .hd i{display:inline-block;width:14px;height:14px;border-radius:7px;background:#4B3A78;margin-right:8px}
+.term .ln{position:absolute;left:24px;font:500 23px ui-monospace,Menlo,monospace;white-space:nowrap}
+/* phone */
+.phone{position:absolute}
+.phone img{display:block;width:100%;border-radius:13%/6%;filter:drop-shadow(0 30px 50px rgba(0,0,0,.5))}
+.step{position:absolute;width:520px}
+.step .n{display:inline-block;width:56px;height:56px;border-radius:28px;background:linear-gradient(135deg,var(--p),var(--pk));font:800 30px/56px Sora;text-align:center;margin-right:16px;vertical-align:middle}
+.step h3{display:inline;font:800 40px Sora;vertical-align:middle}
+.step p{font:400 28px/1.3 Inter;color:var(--mut);margin-top:14px}
+.step code{font:600 24px ui-monospace,Menlo,monospace;color:var(--ac3)}
+.bul{position:absolute;left:1180px;width:640px;font:600 36px/1.25 Inter;padding-left:50px}
+.bul:before{content:"";position:absolute;left:0;top:12px;width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--p4),var(--pk))}
+.feat{position:absolute;width:760px;height:250px;padding:36px 40px}
+.feat small{font:700 22px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--pk3)}
+.feat h4{font:800 44px Sora;margin-top:12px}
+.feat p{font:400 30px/1.3 Inter;color:var(--mut);margin-top:10px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="dots"></div>
+
+  <!-- 1 GANCHO -->
+  <div class="scene" id="s1">
+    <div class="abs logo" id="s1logo" style="left:140px;top:210px">ICEI<span>Bank</span></div>
+    <div class="abs" id="s1h" style="left:140px;top:400px;width:820px;font:800 74px/1.08 Sora">Um banco com 3 agências independentes.</div>
+    <div class="abs" id="s1chip" style="left:140px;top:760px"><span class="chip">Sprints 2 e 3 · Sistemas Distribuídos</span></div>
+    <div id="s1cardw" class="abs" style="left:1040px;top:200px;width:660px;height:410px;perspective:1600px">
+      <div class="bcard" id="s1card" style="left:0;top:0">
+        <div class="t">ICEIBank</div><div class="l">Saldo disponível</div><div class="v" id="s1v">R$ 0,00</div><div class="n">Agência 1</div>
+      </div>
+    </div>
+    <svg class="abs" id="s1net" style="left:1040px;top:640px" width="660" height="300" viewBox="0 0 660 300">
+      <g stroke="rgba(182,149,246,.6)" stroke-width="3" fill="none" stroke-linecap="round">
+        <line id="s1l1" x1="120" y1="120" x2="330" y2="120" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+        <line id="s1l2" x1="330" y1="120" x2="540" y2="120" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+      </g>
+      <g font-family="Sora" font-weight="800" font-size="30" text-anchor="middle">
+        <g id="s1n0"><circle cx="120" cy="120" r="62" fill="#2A1160" stroke="#9B6EF3" stroke-width="3"/><text x="120" y="132" fill="#F5F1FE">0</text></g>
+        <g id="s1n1"><circle cx="330" cy="120" r="62" fill="#2A1160" stroke="#9B6EF3" stroke-width="3"/><text x="330" y="132" fill="#F5F1FE">1</text></g>
+        <g id="s1n2"><circle cx="540" cy="120" r="62" fill="#2A1160" stroke="#9B6EF3" stroke-width="3"/><text x="540" y="132" fill="#F5F1FE">2</text></g>
+      </g>
+      <g font-family="Inter" font-weight="600" font-size="24" fill="#B9AAD9" text-anchor="middle" id="s1lab">
+        <text x="120" y="230">Agência 0</text><text x="330" y="230">Agência 1</text><text x="540" y="230">Agência 2</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 2 PUB/SUB -->
+  <div class="scene" id="s2">
+    <div class="kicker" id="s2k">Sprint 2 · Mensageria</div>
+    <div class="title" id="s2t">Transferência sem esperar o destino</div>
+    <div class="sub" id="s2s">Antes: REST direto. Destino fora do ar, débito pendurado.</div>
+
+    <div class="box node" id="s2a" style="left:160px;top:340px"><h4>Agência 0</h4><p>origem</p><div class="st" id="s2ast"></div></div>
+    <div class="box node" id="s2b" style="left:780px;top:340px;border-color:rgba(236,72,153,.6)"><h4>RabbitMQ</h4><p>exchange topic · fila durable</p>
+      <div class="abs" style="left:40px;right:40px;bottom:36px;height:70px;border-radius:16px;border:2px dashed var(--line)"></div></div>
+    <div class="box node" id="s2c" style="left:1400px;top:340px"><h4>Agência 1</h4><p>destino</p><div class="st" id="s2cst"></div></div>
+    <svg class="abs" style="left:0;top:0" width="1920" height="1080">
+      <g stroke="rgba(182,149,246,.5)" stroke-width="4" stroke-dasharray="4 14" stroke-linecap="round">
+        <line x1="530" y1="480" x2="770" y2="480"/><line x1="1150" y1="480" x2="1390" y2="480"/></g>
+    </svg>
+    <div class="abs" id="s2env" style="width:150px;height:80px;border-radius:18px;background:linear-gradient(135deg,var(--p),var(--pk));font:800 26px/80px Sora;text-align:center;box-shadow:0 14px 40px rgba(236,72,153,.5)">R$ 20,00</div>
+    <div class="abs" id="s2add" style="left:1400px;top:260px;width:360px;text-align:center"><span class="pill g">+ R$ 20,00 creditado</span></div>
+
+    <div class="cap" id="s2c1" style="top:780px">1 · A origem <b>publica</b> e segue a vida</div>
+    <div class="cap" id="s2c2" style="top:780px">2 · O destino caiu: a mensagem <b>espera na fila</b></div>
+    <div class="cap" id="s2c3" style="top:780px">3 · Voltou: <b>consome</b> e credita</div>
+    <div class="abs" id="s2chips" style="left:0;right:0;top:900px;text-align:center">
+      <span class="chip mono" style="margin-right:20px">agencia.1.creditar</span><span class="chip" style="margin-right:20px">fila durable</span><span class="chip">mensagem persistent</span></div>
+  </div>
+
+  <!-- 3 VETORIAL -->
+  <div class="scene" id="s3">
+    <div class="kicker" id="s3k">Sprint 2 · Relógio vetorial</div>
+    <div class="title" id="s3t">Quem veio antes de quem?</div>
+    <div class="sub" id="s3s">1 posição por agência, comparadas uma a uma.</div>
+
+    <!-- linha A -->
+    <div id="s3ra">
+      <div class="vlab" style="left:170px;top:318px"><b>agencia-0</b> · TRANSFERENCIA_DEBITO</div>
+      <div class="vec" style="left:170px;top:360px"><div class="cell">5</div><div class="cell">0</div><div class="cell">0</div></div>
+      <div class="vlab" style="left:1000px;top:318px"><b>agencia-1</b> · CREDITO_REMOTO</div>
+      <div class="vec" style="left:1000px;top:360px"><div class="cell">6</div><div class="cell">3</div><div class="cell">0</div></div>
+      <div class="sym ok" id="s3a0" style="left:600px;top:360px">≤</div>
+      <div class="sym ok" id="s3a1" style="left:724px;top:360px">≤</div>
+      <div class="sym eq" id="s3a2" style="left:848px;top:360px">=</div>
+      <div class="verdict" id="s3va" style="left:1420px;top:350px;color:var(--ac3)">CAUSAL<small>um veio antes do outro</small></div>
+    </div>
+    <!-- linha B -->
+    <div id="s3rb">
+      <div class="vlab" style="left:170px;top:578px"><b>agencia-0</b> · CRIAR_CONTA</div>
+      <div class="vec" style="left:170px;top:620px"><div class="cell">7</div><div class="cell">0</div><div class="cell">0</div></div>
+      <div class="vlab" style="left:1000px;top:578px"><b>agencia-1</b> · CRIAR_CONTA</div>
+      <div class="vec" style="left:1000px;top:620px"><div class="cell">6</div><div class="cell">4</div><div class="cell">0</div></div>
+      <div class="sym no" id="s3b0" style="left:600px;top:620px">&gt;</div>
+      <div class="sym no" id="s3b1" style="left:724px;top:620px">&lt;</div>
+      <div class="sym eq" id="s3b2" style="left:848px;top:620px">=</div>
+      <div class="verdict" id="s3vb" style="left:1420px;top:610px;color:var(--pk3)">CONCORRENTES<small>um sobe, o outro desce</small></div>
+    </div>
+    <div class="cap" id="s3f" style="top:870px;font-size:36px;color:var(--mut)">O <b class="mono" style="font-weight:700">mesclar_logs.py</b> junta os logs e aponta os pares concorrentes.</div>
+  </div>
+
+  <!-- 4 BULLY -->
+  <div class="scene" id="s4">
+    <div class="kicker" id="s4k">Sprint 3 · Algoritmo de Bully</div>
+    <div class="title" id="s4t">Quem manda? O maior ID ativo.</div>
+    <div class="sub" id="s4s">Heartbeat a cada 3 s: se a líder some, a eleição é automática.</div>
+    <svg class="abs" style="left:0;top:0" width="1920" height="1080" id="s4svg">
+      <g id="s4rings" fill="none" stroke="#9B6EF3" stroke-width="3"></g>
+      <g font-family="Sora" font-weight="800" font-size="64" text-anchor="middle">
+        <g id="s4n0"><circle cx="300" cy="560" r="112" fill="#2A1160" stroke="#9B6EF3" stroke-width="4"/><text x="300" y="582" fill="#F5F1FE">0</text></g>
+        <g id="s4n1"><circle cx="640" cy="560" r="112" fill="#2A1160" stroke="#9B6EF3" stroke-width="4"/><text x="640" y="582" fill="#F5F1FE">1</text></g>
+        <g id="s4n2"><circle cx="980" cy="560" r="112" fill="#2A1160" stroke="#9B6EF3" stroke-width="4"/><text x="980" y="582" fill="#F5F1FE">2</text></g>
+      </g>
+      <g id="s4x" stroke="#F43F5E" stroke-width="10" stroke-linecap="round"><line x1="930" y1="510" x2="1030" y2="610"/><line x1="1030" y1="510" x2="930" y2="610"/></g>
+      <g id="s4crown" transform="translate(0,0)">
+        <path d="M-46 22 L-56 -30 L-22 -2 L0 -44 L22 -2 L56 -30 L46 22 Z" fill="#FBBF24" stroke="#F59E0B" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="-46" y="28" width="92" height="12" rx="6" fill="#F59E0B"/>
+      </g>
+    </svg>
+    <div class="abs" style="left:300px;top:720px;width:0"></div>
+    <div id="s4st0" class="abs" style="left:150px;top:710px;width:300px;text-align:center"><span class="pill g">Ativa</span></div>
+    <div id="s4st1" class="abs" style="left:490px;top:710px;width:300px;text-align:center"><span class="pill g">Ativa</span></div>
+    <div id="s4st2" class="abs" style="left:830px;top:710px;width:300px;text-align:center"><span class="pill g" id="s4st2p">Ativa</span></div>
+    <div id="s4lab" class="abs" style="left:150px;top:350px;width:980px;text-align:center;font:700 28px Inter;color:var(--mut)"></div>
+    <div class="term" id="s4term" style="left:1230px;top:330px;width:570px;height:440px">
+      <div class="hd"><i></i><i></i><i></i>log de eventos</div>
+      <div class="ln" id="s4l0" style="top:78px;color:#B695F6">TORNOU_LIDER {idAgencia: 0}</div>
+      <div class="ln" id="s4l1" style="top:118px;color:#B695F6">TORNOU_LIDER {idAgencia: 1}</div>
+      <div class="ln" id="s4l2" style="top:158px;color:#71E4D4">TORNOU_LIDER {idAgencia: 2}</div>
+      <div class="ln" id="s4l3" style="top:238px;color:#FDA4AF">LIDER_NAO_RESPONDEU {liderAtual: 2}</div>
+      <div class="ln" id="s4l4" style="top:278px;color:#B695F6">ELEICAO_INICIADA {idAgencia: 1}</div>
+      <div class="ln" id="s4l5" style="top:318px;color:#71E4D4">TORNOU_LIDER {idAgencia: 1}</div>
+      <div class="ln" id="s4l6" style="top:358px;color:#71E4D4">LIDER_ANUNCIADO {liderId: 1}</div>
+    </div>
+    <div class="cap" id="s4c1" style="top:880px">Na subida, várias se declaram líder e <b>convergem na 2</b></div>
+    <div class="cap" id="s4c2" style="top:880px">A líder caiu: o heartbeat falha e a <b>reeleição é automática</b></div>
+  </div>
+
+  <!-- 5 FLUTTER -->
+  <div class="scene" id="s5">
+    <div class="phone" id="s5ph" style="left:150px;top:120px;width:430px"><img src="assets/app-sincronizacao.png"></div>
+    <div class="abs" id="s5lead" style="left:640px;top:520px;width:480px">
+      <div class="box" style="padding:26px;border-radius:26px;background:#fff;color:#1B1237;box-shadow:0 30px 70px rgba(0,0,0,.45)">
+        <div style="display:flex;align-items:center;gap:20px">
+          <div style="width:68px;height:68px;border-radius:18px;background:#FDE3F1;display:flex;align-items:center;justify-content:center">
+            <svg width="40" height="40" viewBox="-60 -50 120 100"><path d="M-46 22 L-56 -30 L-22 -2 L0 -44 L22 -2 L56 -30 L46 22 Z" fill="none" stroke="#EC4899" stroke-width="9" stroke-linejoin="round"/></svg></div>
+          <div><div style="font:400 24px Inter;color:#6B6490">Líder atual</div><div style="font:800 40px Sora" id="s5ln">Agência 2</div></div>
+          <div style="margin-left:auto;width:18px;height:18px;border-radius:9px;background:#22B2A3"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:22px;font:700 21px Inter;white-space:nowrap">
+          <div style="flex:1;padding:12px;border-radius:14px;background:#F5F1FE;border:2px solid #E3DAF8">Agência 0<div style="color:#178F85;font-weight:600;margin-top:4px">● Ativa</div></div>
+          <div style="flex:1;padding:12px;border-radius:14px;background:#F5F1FE;border:2px solid #E3DAF8">Agência 1<div style="color:#178F85;font-weight:600;margin-top:4px">● Ativa</div></div>
+          <div style="flex:1;padding:12px;border-radius:14px;background:#F5F1FE;border:2px solid #6D28D9">Agência 2<div style="color:#178F85;font-weight:600;margin-top:4px">● Ativa</div></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;font:600 24px Inter;color:var(--mut);text-align:center">Painel da líder, atualizado a cada 3 s</div>
+    </div>
+    <div class="kicker" id="s5k" style="left:1180px">Sprint 3 · App Flutter</div>
+    <div class="title" id="s5t" style="left:1180px;width:640px;font-size:64px">O banco no bolso</div>
+    <div class="bul" id="s5b1" style="top:330px">Login de aluno e de administrador</div>
+    <div class="bul" id="s5b2" style="top:450px">Saldo, depósito, saque e transferência</div>
+    <div class="bul" id="s5b3" style="top:590px">Mesma API REST das agências</div>
+    <div class="bul" id="s5b4" style="top:700px">Design system próprio, tema claro e escuro</div>
+  </div>
+
+  <!-- 6 OFFLINE -->
+  <div class="scene" id="s6">
+    <div class="kicker" id="s6k">Sprint 3 · Offline-first</div>
+    <div class="title" id="s6t">Sem internet, o app continua</div>
+
+    <div class="step" id="s6a" style="left:110px;top:240px"><span class="n">1</span><h3>Offline</h3><p>Mostra o último saldo conhecido e guarda a operação na fila.</p></div>
+    <div class="phone" id="s6pa" style="left:200px;top:520px;width:330px"><img src="assets/app-offline.png"></div>
+
+    <div class="step" id="s6b" style="left:700px;top:240px"><span class="n">2</span><h3>Reconectou</h3><p>Sincroniza sozinho com <code>POST /contas/{id}/sincronizar</code></p></div>
+    <div class="phone" id="s6pb" style="left:790px;top:520px;width:330px"><img src="assets/app-sincronizacao.png"></div>
+
+    <div class="step" id="s6c" style="left:1290px;top:240px"><span class="n" style="background:linear-gradient(135deg,#F59E0B,#F43F5E)">3</span><h3>Conflito 409</h3><p>A conta mudou: o app pergunta se <b style="color:var(--tx)">reenvia</b> ou <b style="color:var(--tx)">descarta</b>.</p></div>
+    <div class="phone" id="s6pc" style="left:1380px;top:520px;width:330px"><img src="assets/app-conflito.png"></div>
+    <svg class="abs" style="left:0;top:0" width="1920" height="1080"><g fill="none" stroke="#B695F6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path id="s6ar1" d="M575 700 L655 700 M625 670 L655 700 L625 730"/>
+      <path id="s6ar2" d="M1165 700 L1245 700 M1215 670 L1245 700 L1215 730"/></g></svg>
+  </div>
+
+  <!-- 7 EXTRAS -->
+  <div class="scene" id="s7">
+    <div class="kicker" id="s7k">Funcionalidades extras</div>
+    <div class="title" id="s7t">Também entregue</div>
+    <div class="box feat" id="s7a" style="left:150px;top:320px"><small>Sprint 2</small><h4>Alerta de saldo baixo</h4><p>Abaixo de R$ 50, o aviso vai para uma fila própria.</p></div>
+    <div class="box feat" id="s7b" style="left:1010px;top:320px"><small>Sprint 3</small><h4>Painel da líder</h4><p>No app, atualizado a cada 3 segundos.</p></div>
+    <div class="box feat" id="s7c" style="left:150px;top:620px"><small>Sprint 3</small><h4>Histórico de lideranças</h4><p>Quem foi líder e quando mudou.</p></div>
+    <div class="box feat" id="s7d" style="left:1010px;top:620px"><small>Sprint 3</small><h4>Testes automatizados</h4><p>Fila, cache, sincronização e líder, com flutter test.</p></div>
+  </div>
+
+  <!-- 8 FECHAMENTO -->
+  <div class="scene" id="s8">
+    <div class="kicker" id="s8k" style="left:0;right:0;text-align:center">Próximo passo</div>
+    <div class="abs" id="s8a" style="left:160px;right:160px;top:170px;text-align:center;font:800 66px/1.12 Sora">Sprint 4: a líder passa a coordenar <span style="color:var(--pk3)">transações distribuídas</span></div>
+    <div class="abs" id="s8b" style="left:160px;right:160px;top:430px;text-align:center;font:400 38px/1.3 Inter;color:var(--mut)">Em aberto: persistência, estorno e vetor por conta.</div>
+    <div class="abs logo" id="s8l" style="left:0;right:0;top:600px;text-align:center">ICEI<span>Bank</span></div>
+    <div class="abs" id="s8c" style="left:0;right:0;top:790px;text-align:center">
+      <span class="chip" style="margin:0 8px">FastAPI</span><span class="chip" style="margin:0 8px">RabbitMQ</span><span class="chip" style="margin:0 8px">React</span><span class="chip" style="margin:0 8px">Flutter</span></div>
+  </div>
+
+  <div id="bar"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const pr=(l,s,d)=>clamp((l-s)/d);
+const lerp=(a,b,x)=>a+(b-a)*x;
+// entrada com fade+deslize; "out" = instante em que some
+function en(id,l,s,o={}){
+  const d=o.d||.55,e=$(id);
+  let p=eo(pr(l,s,d));
+  let op=p;
+  if(o.out!=null) op*=1-pr(l,o.out,.3);
+  e.style.opacity=op;
+  e.style.transform=`translate(${(1-p)*(o.x||0)}px,${(1-p)*(o.y===undefined?26:o.y)}px)`;
+  e.style.visibility=op<=0.001?'hidden':'visible';
+}
+const SC=[ // id, início, duração
+ ['s1',0,4],['s2',4,12],['s3',16,12],['s4',28,12],['s5',40,10],['s6',50,14],['s7',64,6],['s8',70,6]];
+const TOTAL=76;
+const fmtBRL=v=>'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+const F={
+ s1(l){
+   en('s1logo',l,.05,{d:.5,x:-40,y:0});
+   en('s1h',l,.45,{d:.5,x:-40,y:0});
+   en('s1chip',l,1.1,{d:.5,y:20});
+   const p=eo(pr(l,0,1.1));
+   const card=$('s1card');
+   card.style.opacity=clamp(l/.35);
+   card.style.transform=`rotateY(${lerp(-55,-12,p)}deg) rotateX(${lerp(14,6,p)}deg) translateY(${lerp(60,0,p)}px)`;
+   $('s1v').textContent=fmtBRL(624*eo(pr(l,.2,1.6)));
+   for(const [i,s] of [[0,1.0],[1,1.25],[2,1.5]]){
+     const e=$('s1n'+i); const q=eo(pr(l,s,.4)); e.style.opacity=q;
+     e.style.transformOrigin=`${120+210*i}px 120px`; e.style.transform=`scale(${lerp(.4,1,q)})`;}
+   $('s1l1').style.strokeDashoffset=1-eo(pr(l,1.3,.5));
+   $('s1l2').style.strokeDashoffset=1-eo(pr(l,1.55,.5));
+   $('s1lab').style.opacity=eo(pr(l,1.8,.5));
+ },
+ s2(l){
+   en('s2k',l,.1);en('s2t',l,.25);en('s2s',l,.9);
+   en('s2a',l,1.2,{y:30});en('s2b',l,1.4,{y:30});en('s2c',l,1.6,{y:30});
+   // estados
+   const bDown=l>=3.8&&l<7.0;
+   const c=$('s2c'); c.style.borderColor=bDown?'rgba(244,63,94,.8)':(l>=7?'rgba(34,178,163,.8)':'');
+   $('s2cst').innerHTML=l<1.8?'':(bDown?'<span class="pill r">fora do ar</span>':(l>=7?'<span class="pill g">no ar de novo</span>':'<span class="pill g">no ar</span>'));
+   $('s2ast').innerHTML=l>=3.4?'<span class="pill v">publicado ✓</span>':'';
+   // envelope
+   const env=$('s2env'); let x,y,op=0;
+   const A=[265,430],Q=[885,545],B=[1505,430];
+   if(l>=2.0&&l<7.2){ // origem -> fila
+     const q=eio(pr(l,2.2,1.1)); x=lerp(A[0],Q[0],q); y=lerp(A[1],Q[1],q)-Math.sin(q*Math.PI)*30; op=clamp((l-2.0)/.25);
+     if(l>3.4){x=Q[0];y=Q[1]; y+=Math.sin((l-3.4)*3)*3;}
+   } else if(l>=7.2&&l<8.7){
+     const q=eio(pr(l,7.2,1.1)); x=lerp(Q[0],B[0],q); y=lerp(Q[1],B[1],q)-Math.sin(q*Math.PI)*30; op=1-pr(l,8.3,.35);
+   }
+   env.style.opacity=op; env.style.left=(x-75)+'px'; env.style.top=(y-40)+'px';
+   en('s2add',l,8.3,{d:.4,y:-10});
+   // legendas
+   en('s2c1',l,1.9,{d:.4,out:3.5});
+   en('s2c2',l,3.7,{d:.4,out:6.8});
+   en('s2c3',l,7.1,{d:.4});
+   en('s2chips',l,8.8,{d:.5});
+ },
+ s3(l){
+   en('s3k',l,.1);en('s3t',l,.25);en('s3s',l,.9);
+   en('s3ra',l,1.8,{d:.6});
+   [['s3a0',3.0],['s3a1',3.4],['s3a2',3.8]].forEach(([id,s])=>{const e=$(id),q=eo(pr(l,s,.4));e.style.opacity=q;e.style.transform=`scale(${lerp(.4,1,q)})`;});
+   en('s3va',l,4.4,{d:.5,x:-30,y:0});
+   en('s3rb',l,5.4,{d:.6});
+   [['s3b0',6.6],['s3b1',7.0],['s3b2',7.4]].forEach(([id,s])=>{const e=$(id),q=eo(pr(l,s,.4));e.style.opacity=q;e.style.transform=`scale(${lerp(.4,1,q)})`;});
+   en('s3vb',l,8.0,{d:.5,x:-30,y:0});
+   en('s3f',l,9.0,{d:.5,y:14});
+ },
+ s4(l){
+   en('s4k',l,.1);en('s4t',l,.25);en('s4s',l,.9);
+   const X=[300,640,980];
+   [0,1,2].forEach(i=>{
+     const e=$('s4n'+i),q=eo(pr(l,1.3+i*.15,.45)); e.style.opacity=q;
+     e.style.transformOrigin=`${X[i]}px 560px`;e.style.transform=`scale(${lerp(.5,1,q)})`;
+     en('s4st'+i,l,1.7+i*.12,{d:.4,y:10});
+   });
+   const down=l>=6.0;
+   $('s4st2p').className='pill '+(down?'r':'g'); $('s4st2p').textContent=down?'Fora do ar':'Ativa';
+   const c2=$('s4n2').firstElementChild; c2.setAttribute('stroke',down?'#F43F5E':'#9B6EF3');
+   $('s4n2').style.opacity=down?0.55:$('s4n2').style.opacity;
+   $('s4x').style.opacity=down?eo(pr(l,6.0,.3)):0;
+   // coroa: 0 (2.0) -> 1 (2.8) -> 2 (3.6) ; depois 2 -> 1 (7.6)
+   let cx,cy=400,op=0;
+   const hop=(a,b,s,d)=>{const q=eio(pr(l,s,d));return [lerp(a,b,q),400-Math.sin(q*Math.PI)*60];};
+   if(l<2.0){cx=X[0];op=0;}
+   else if(l<2.8){[cx,cy]=hop(X[0],X[0],2.0,.1);cx=X[0];op=eo(pr(l,2.0,.3));}
+   else if(l<3.6){[cx,cy]=hop(X[0],X[1],2.6,.5);op=1;}
+   else if(l<7.4){[cx,cy]=hop(X[1],X[2],3.4,.5);op=1;}
+   else{[cx,cy]=hop(X[2],X[1],7.4,.7);op=1;}
+   if(l>=2.6&&l<3.4){[cx,cy]=hop(X[0],X[1],2.6,.5);}
+   if(l>=3.4&&l<7.4){[cx,cy]=hop(X[1],X[2],3.4,.5);}
+   $('s4crown').setAttribute('transform',`translate(${cx},${cy})`);
+   $('s4crown').style.opacity=op;
+   // heartbeat
+   const R=$('s4rings');R.innerHTML='';
+   if(l>=4.2&&l<6.0){
+     [0,1].forEach(i=>{const ph=((l-4.2)/1.2+i*.0)%1; const r=112+ph*60;
+       R.innerHTML+=`<circle cx="${X[i]}" cy="560" r="${r}" opacity="${(1-ph)*.8}"/>`;});
+     const ph=((l-4.2)/1.2)%1;R.innerHTML+=`<circle cx="${X[2]}" cy="560" r="${112+ph*60}" opacity="${(1-ph)*.8}"/>`;
+   }
+   const lab=$('s4lab'); lab.style.opacity=l>=4.2&&l<6.0?1:0; lab.textContent='heartbeat';
+   // log
+   [[0,2.0],[1,2.8],[2,3.6],[3,6.2],[4,6.9],[5,7.5],[6,8.3]].forEach(([i,s])=>en('s4l'+i,l,s,{d:.3,y:8,x:12}));
+   $('s4term').style.opacity=eo(pr(l,1.2,.5));
+   en('s4c1',l,2.2,{d:.4,out:5.8});
+   en('s4c2',l,6.1,{d:.4});
+ },
+ s5(l){
+   en('s5ph',l,.2,{y:80,d:.7});
+   en('s5lead',l,1.0,{x:-40,y:0,d:.6});
+   en('s5k',l,.2);en('s5t',l,.35);
+   [1,2,3,4].forEach((i,k)=>en('s5b'+i,l,1.4+k*1.0,{x:30,y:0,d:.5}));
+ },
+ s6(l){
+   en('s6k',l,.1);en('s6t',l,.25);
+   en('s6a',l,.9);en('s6pa',l,1.1,{y:140,d:.8});
+   en('s6b',l,4.5);en('s6pb',l,4.7,{y:140,d:.8});
+   en('s6c',l,8.2);en('s6pc',l,8.4,{y:140,d:.8});
+   en('s6ar1',l,4.2,{d:.4,x:-20,y:0});en('s6ar2',l,7.9,{d:.4,x:-20,y:0});
+ },
+ s7(l){
+   en('s7k',l,.1);en('s7t',l,.2);
+   ['s7a','s7b','s7c','s7d'].forEach((id,k)=>en(id,l,.6+k*.5,{d:.5,y:30}));
+ },
+ s8(l){
+   en('s8k',l,.1);
+   en('s8a',l,.3,{d:.6});
+   en('s8b',l,1.7,{d:.5});
+   en('s8l',l,3.4,{d:.6});
+   en('s8c',l,4.0,{d:.5});
+ }
+};
+
+window.render=function(t){
+  $('dots').style.transform=`translate(${-(t*8)%60}px,${-(t*5)%60}px)`;
+  $('bar').style.width=(t/TOTAL*100)+'%';
+  for(const [id,s,d] of SC){
+    const el=$(id),l=t-s;
+    if(l<0||l>=d){el.style.display='none';continue;}
+    el.style.display='block';
+    el.style.opacity=clamp(l/.3)*clamp((d-l)/.3);
+    F[id](l);
+  }
+};
+window.ready=(async()=>{
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i=>i.decode()));
+  await Promise.all(['700 20px Sora','800 20px Sora','400 20px Inter','600 20px Inter','700 20px Inter'].map(f=>document.fonts.load(f)));
+  return true;
+})();
+</script>
+</body>
+</html>

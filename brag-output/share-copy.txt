@@ -1,0 +1,3 @@
+Três agências, nenhuma sabe o que a outra está fazendo, e mesmo assim o ICEIBank funciona: mensagens esperam na fila do RabbitMQ, relógios vetoriais dizem quem veio antes, o Bully elege a líder e o app Flutter segue de pé sem internet.
+Sprints 2 e 3 do ICEIBank em 76 segundos.
+#SistemasDistribuídos #RabbitMQ #Flutter #OfflineFirst
