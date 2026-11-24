@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -486,20 +487,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                if (_saldoProvisorio != null &&
-                    _saldoProvisorio! < limiteSaldoBaixo) ...[
-                  _CartaoAviso(
-                    chave: const Key('saldo-baixo'),
-                    icone: LucideIcons.triangleAlert,
-                    titulo: 'Saldo baixo',
-                    linhas: [
-                      'Seu saldo está em ${formatarReais(_saldoProvisorio!)}, '
-                          'abaixo de ${formatarReais(limiteSaldoBaixo)}.',
-                    ],
-                    alerta: true,
-                  ),
-                  const SizedBox(height: 16),
-                ],
                 Entrada(
                   ordem: 1,
                   child: _CartaoSaldo(
@@ -509,6 +496,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     saldo: _saldoProvisorio,
                     provisorio: _pendentes.isNotEmpty,
                     carregando: _carregando,
+                    saldoBaixo: _saldoProvisorio != null &&
+                        _saldoProvisorio! < limiteSaldoBaixo,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -698,7 +687,6 @@ class _CartaoAviso extends StatelessWidget {
   final String titulo;
   final List<String> linhas;
   final bool erro;
-  final bool alerta; // âmbar: atenção, sem ser erro
   final VoidCallback? aoFechar; // sem ele, o aviso não pode ser dispensado
 
   const _CartaoAviso({
@@ -708,16 +696,13 @@ class _CartaoAviso extends StatelessWidget {
     required this.linhas,
     this.aoFechar,
     this.erro = false,
-    this.alerta = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final escuro = tema.brightness == Brightness.dark;
-    final cor = alerta
-        ? const Color(0xFFD97706)
-        : erro
+    final cor = erro
         ? tema.colorScheme.error
         : Paleta.accent[escuro ? 400 : 600]!;
 
@@ -910,6 +895,7 @@ class _CartaoSaldo extends StatelessWidget {
   final double? saldo;
   final bool provisorio; // há operações pendentes somadas ao saldo
   final bool carregando;
+  final bool saldoBaixo;
 
   const _CartaoSaldo({
     required this.nome,
@@ -918,6 +904,7 @@ class _CartaoSaldo extends StatelessWidget {
     required this.saldo,
     required this.provisorio,
     required this.carregando,
+    required this.saldoBaixo,
   });
 
   @override
@@ -934,6 +921,7 @@ class _CartaoSaldo extends StatelessWidget {
               saldo: saldo,
               provisorio: provisorio,
               carregando: carregando,
+              saldoBaixo: saldoBaixo,
             ),
           ),
         ),
@@ -949,6 +937,7 @@ class _ConteudoCartao extends StatelessWidget {
   final double? saldo;
   final bool provisorio;
   final bool carregando;
+  final bool saldoBaixo;
 
   const _ConteudoCartao({
     required this.nome,
@@ -956,6 +945,7 @@ class _ConteudoCartao extends StatelessWidget {
     required this.saldo,
     required this.provisorio,
     required this.carregando,
+    required this.saldoBaixo,
   });
 
   @override
@@ -1012,13 +1002,70 @@ class _ConteudoCartao extends StatelessWidget {
               Text('—', style: tema.headlineMedium?.copyWith(color: branco)),
           ],
         ),
-        Text(
-          '$nome · $agencia',
-          style: tema.bodySmall?.copyWith(
-            color: branco.withValues(alpha: 0.75),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$nome · $agencia',
+                overflow: TextOverflow.ellipsis,
+                style: tema.bodySmall?.copyWith(
+                  color: branco.withValues(alpha: 0.75),
+                ),
+              ),
+            ),
+            if (saldoBaixo) const _ChipSaldoBaixo(),
+          ],
         ),
       ],
+    );
+  }
+}
+
+
+// Pílula de vidro fosco dentro do cartão: desfoque do fundo, borda fina e só
+// um pontinho âmbar de cor.
+class _ChipSaldoBaixo extends StatelessWidget {
+  const _ChipSaldoBaixo();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      key: const Key('saldo-baixo'),
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBBF24).withValues(alpha: 0.26),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: const Color(0xFFFDE68A).withValues(alpha: 0.55),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                LucideIcons.triangleAlert,
+                size: 13,
+                color: Color(0xFFFDE68A),
+              ),
+              const SizedBox(width: 7),
+              const Text(
+                'Saldo baixo',
+                style: TextStyle(
+                  color: Color(0xFFFFFBEB),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

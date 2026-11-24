@@ -28,20 +28,6 @@ function StudentOverview() {
 
   return (
     <div className="space-y-6">
-      {saldoBaixo && (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4"
-        >
-          <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Saldo baixo</p>
-            <p className="text-xs text-muted mt-0.5">
-              Seu saldo está em R$ {dadosConta.saldo.toFixed(2)}, abaixo de R$ {LIMITE_SALDO_BAIXO.toFixed(2)}.
-            </p>
-          </div>
-        </div>
-      )}
       <div className="card p-6 relative overflow-hidden">
         <div className="absolute -bottom-12 -right-12 w-56 h-56 rounded-full bg-brand-gradient opacity-[0.16] blur-2xl pointer-events-none" />
 
@@ -63,7 +49,18 @@ function StudentOverview() {
 
         <div className="flex items-center justify-between gap-4 relative">
           <div>
-            <span className="text-xs font-semibold text-muted">Saldo Disponível</span>
+            <span className="flex items-center gap-2 text-xs font-semibold text-muted">
+              Saldo Disponível
+              {saldoBaixo && (
+                <span
+                  role="alert"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-amber-300/25 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 backdrop-blur-md dark:border-amber-300/40 dark:bg-amber-300/15 dark:text-amber-200"
+                >
+                  <AlertTriangle size={12} />
+                  Saldo baixo
+                </span>
+              )}
+            </span>
             <p className="text-4xl font-display font-extrabold mt-1 tracking-tight">
               R$ {dadosConta ? dadosConta.saldo.toFixed(2) : '0,00'}
             </p>
